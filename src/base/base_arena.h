@@ -35,13 +35,13 @@ function void arena_pop(Arena *arena, Int size);
 function void arena_clear(Arena *arena);
 
 template <typename T>
-function T *arena_push(Arena *arena) {
+function T *arena_new(Arena *arena) {
     auto result = _arena_push_aligned(arena, sizeof(T), alignof(T));
     return cast(T*)result.data;
 }
 
 template <typename T>
-function Slice<T> arena_push(Arena *arena, Int count) {
+function Slice<T> arena_make(Arena *arena, Int count) {
     Slice<T> result = {};
 
     auto result_data = _arena_push_aligned(arena, sizeof(T) * count, alignof(T));

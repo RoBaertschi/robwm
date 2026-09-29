@@ -22,7 +22,7 @@ function_global int main(void) {
     auto arena = arena_alloc();
     defer(arena_destroy(arena));
 
-    auto floats = arena_push<F32>(arena, 2);
+    auto floats = arena_make<F32>(arena, 2);
 
     F32 test = 2.0;
     for (auto& f : floats) {

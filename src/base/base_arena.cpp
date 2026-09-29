@@ -26,7 +26,7 @@ function Arena *arena_alloc(Uint commited, Uint reserved, Arena_Flags flags) {
 
     a.flags = Arena_No_Growing;
 
-    auto arena = arena_push<Arena>(&a);
+    auto arena = arena_new<Arena>(&a);
     *arena     = a;
 
     arena->flags = flags;
