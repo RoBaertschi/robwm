@@ -21,6 +21,14 @@ function Bool virtual_commit(void *data, Uint size) {
     return ok;
 }
 
+function Bool virtual_decommit(void *data, Uint size) {
+    Assert(align_up(cast(Uintptr)data, cast(Uintptr)VIRTUAL_PAGE_SIZE) == cast(Uintptr)data);
+    size = align_up(size, cast(Uint)VIRTUAL_PAGE_SIZE);
+
+    Bool ok = mprotect(data, size, PROT_NONE) == 0;
+    return ok;
+}
+
 function void virtual_release(void *data, Uint size) {
     Assert(align_up(cast(Uintptr)data, cast(Uintptr)VIRTUAL_PAGE_SIZE) == cast(Uintptr)data);
     size = align_up(size, cast(Uint)VIRTUAL_PAGE_SIZE);

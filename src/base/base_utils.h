@@ -28,6 +28,11 @@
 
 #define IsPowerOfTwo(x) ((x) != 0 && ((x) & ((x) - 1)) == 0)
 
+#define Kilobyte (1_u64 << 10)
+#define Megabyte (1_u64 << 20)
+#define Gigabyte (1_u64 << 30)
+#define Terabyte (1_u64 << 40)
+
 #define global static
 #define function static
 #define function_global
@@ -166,7 +171,5 @@ privDefer<F> defer_func(F f) {
 	return privDefer<F>(f);
 }
 
-#define DEFER_1(x, y) x##y
-#define DEFER_2(x, y) DEFER_1(x, y)
-#define DEFER_3(x)    DEFER_2(x, __COUNTER__)
-#define defer(code)   auto DEFER_3(_defer_) = defer_func([&](){code;})
+#define DEFER(x)    Glue(x, __COUNTER__)
+#define defer(code) auto DEFER(_defer_) = defer_func([&](){code;})

@@ -25,9 +25,3 @@ typedef I64 Int;
 typedef U64 Uint;
 
 typedef Uint Uintptr;
-
-template <typename T>
-struct Slice {
-    T    *data;
-    Uint len;
-};

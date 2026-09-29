@@ -4,11 +4,8 @@
 #include <stdio.h>
 
 function_global int main(void) {
-    U8 test = 0xffffffffffffffff_u8;
-
-    printf(FMT_U8 "\n", test);
-
     auto result = virtual_reserve(10);
+    defer(virtual_release(result.data, 10));
     if (result.ok) {
         printf("virtual_reserve: %p\n", result.data);
 
@@ -18,8 +15,22 @@ function_global int main(void) {
         } else {
             printf("virtual_commit: failed\n");
         }
-        virtual_release(result.data, 10);
     } else {
-        printf("virtual_reserve: failed");
+        printf("virtual_reserve: failed\n");
+    }
+
+    auto arena = arena_alloc();
+    defer(arena_destroy(arena));
+
+    auto floats = arena_push<F32>(arena, 2);
+
+    F32 test = 2.0;
+    for (auto& f : floats) {
+        f     = test;
+        test *= 4;
+    }
+
+    for (Int i = 0; i < floats.len; i++) {
+        printf("%f\n", floats[i]);
     }
 }
