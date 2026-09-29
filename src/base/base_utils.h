@@ -33,7 +33,7 @@
 #define Gigabyte (1_u64 << 30)
 #define Terabyte (1_u64 << 40)
 
-#define global static
+#define variable_global static
 #define function static
 #define function_global
 #define function_static static

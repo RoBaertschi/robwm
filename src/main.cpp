@@ -1,5 +1,8 @@
 #include "base/base_inc.h"
+#include "wayland/wayland_inc.h"
+
 #include "base/base_inc.cpp"
+#include "wayland/wayland_inc.cpp"
 
 #include <stdio.h>
 
