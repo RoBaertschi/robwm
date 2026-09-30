@@ -9,5 +9,6 @@
 #include "base_string.h"
 #include "base_virtual.h"
 #include "base_arena.h"
+#include "base_logging.h"
 
 #endif

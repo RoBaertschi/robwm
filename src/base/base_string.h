@@ -18,5 +18,6 @@ struct String {
 
 function String string_from_cstring(char const *cstring);
 
+#define STR(literal) String { cast(U8 const *)literal, cast(Int)(sizeof(literal)-1) }
 #define FMT_STR "%.*s"
 #define FMT_STR_ARG(s) cast(int)(s).len, cast(char const *)(s).data
