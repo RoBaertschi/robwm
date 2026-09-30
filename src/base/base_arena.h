@@ -44,10 +44,12 @@ template <typename T>
 function Slice<T> arena_make(Arena *arena, Int count) {
     Slice<T> result = {};
 
-    auto result_data = _arena_push_aligned(arena, sizeof(T) * count, alignof(T));
+    auto result_data = _arena_push_aligned(arena, sizeof(T) * cast(Uint)count, alignof(T));
 
     result.data = cast(T*)result_data.data;
     result.len  = count;
 
     return result;
 }
+
+function String arena_string_clone(Arena *arena, String string);

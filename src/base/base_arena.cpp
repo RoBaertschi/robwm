@@ -103,14 +103,14 @@ function Slice<U8> _arena_push_aligned_non_zeroed(Arena *a, Uint size, Uint alig
     curr->used = end;
 
     result.data = cast(U8*)(curr->data + cast(Uintptr)start);
-    result.len  = end - start;
+    result.len  = cast(Int)(end - start);
 
     return result;
 }
 
 function Slice<U8> _arena_push_aligned(Arena *a, Uint size, Uint alignment) {
     auto result = _arena_push_aligned_non_zeroed(a, size, alignment);
-    MemoryZero(result.data, result.len);
+    MemoryZero(result.data, cast(Uint)result.len);
     return result;
 }
 
@@ -154,4 +154,16 @@ function void arena_pop(Arena *arena, Int size) {
 
 function void arena_clear(Arena *arena) {
     arena_pop_to(arena, 0);
+}
+
+function String arena_string_clone(Arena *arena, String string) {
+    String result = {};
+
+    auto slice = arena_make<U8>(arena, string.len);
+    MemoryCopy(slice.data, string.data, cast(Uint)string.len);
+
+    result.len  = string.len;
+    result.data = slice.data;
+
+    return result;
 }

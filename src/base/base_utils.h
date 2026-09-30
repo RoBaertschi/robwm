@@ -20,6 +20,8 @@
 
 #define ArrayCount(a) (sizeof(a)/sizeof(*(a)))
 
+#define Unused(v) (void)(v)
+
 #define UintFromPtr(p) cast(Uint)(cast(char*)p - cast(char*)0)
 #define PtrFromUint(n) cast(void*)(cast(char*)0 + (n))
 
@@ -34,9 +36,10 @@
 #define Terabyte (1_u64 << 40)
 
 #define variable_global static
+#define variable_function_static static
 #define function static
 #define function_global
-#define function_static static
+#define function_noreturn [[noreturn]] static
 
 #define c_linkage_begin extern "C" {
 #define c_linkage_end }
@@ -115,6 +118,9 @@ function Uint operator ""_uint(unsigned long long value) { return cast(Uint)valu
 #define MemoryCopyTyped(d, s, c) MemoryCopy((d), (s), Min(sizeof(*(d)), sizeof(*(s)))*(c))
 
 // Linked lists
+
+#define DLLForEach_N(first, element, next) for (auto element = (first); element; element = element->next)
+#define DLLForEach(first, element) DLLForEach_N(first, element, next)
 
 #define DLLPushBack_NP(f,l,n,next,prev) ((f)==0?\
 ((f)=(l)=(n),(n)->next=(n)->prev=0):\

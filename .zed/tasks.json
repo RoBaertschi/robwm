@@ -3,8 +3,19 @@
 // Example:
 [
   {
-    "label": "Run",
+    "label": "Build",
     "command": "./build.sh",
-    "save": "all"
+    "save": "all",
+    "reveal": "no_focus"
+  },
+  {
+    "label": "Run",
+    "command": "./build.sh run",
+    "save": "all",
+    "reveal": "no_focus",
+    "env": {
+      "WAYLAND_DISPLAY": "wayland-1",
+      "WAYLAND_DEBUG": "1"
+    }
   }
 ]

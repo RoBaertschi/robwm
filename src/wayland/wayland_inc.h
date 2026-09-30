@@ -4,4 +4,6 @@
 #include "protocols/wayland.h"
 #include "protocols/river-window-management-v1.h"
 
+#include "wayland.h"
+
 #endif

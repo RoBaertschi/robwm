@@ -5,3 +5,5 @@
 #include "protocols/river-window-management-v1.c"
 
 #pragma GCC diagnostic pop
+
+#include "wayland.cpp"
