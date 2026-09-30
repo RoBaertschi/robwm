@@ -45,7 +45,7 @@ function void wl_river_window_manager_listener_unavailable(void *data,
     Unused(data);
     Unused(river_window_manager);
 
-    log_debugf("Window manager is unavailable!");
+    logger_debugf(wl_state->logger, "Window manager is unavailable!");
 }
 
 function void wl_river_window_manager_listener_finished(void *data,
@@ -54,7 +54,7 @@ function void wl_river_window_manager_listener_finished(void *data,
     Unused(data);
     Unused(river_window_manager);
 
-    log_debugf("Window manager is finished!\n");
+    logger_debugf(wl_state->logger, "Window manager is finished!\n");
 }
 
 function void wl_river_window_manager_listener_manage_start(void *data,
@@ -63,7 +63,7 @@ function void wl_river_window_manager_listener_manage_start(void *data,
     Unused(data);
     Unused(river_window_manager);
 
-    log_debugf("Window manager manage start.\n");
+    logger_debugf(wl_state->logger, "Window manager manage start.\n");
 }
 
 function void wl_river_window_manager_listener_render_start(void *data,
@@ -71,7 +71,7 @@ function void wl_river_window_manager_listener_render_start(void *data,
 {
     Unused(data);
     Unused(river_window_manager);
-    log_debugf("Window manager render start.\n");
+    logger_debugf(wl_state->logger, "Window manager render start.\n");
 }
 
 function void wl_river_window_manager_listener_session_locked(void *data,
@@ -131,6 +131,7 @@ function void wl_init(void) {
     auto arena = arena_alloc();
     wl_state = arena_new<Wl_State>(arena);
     wl_state->arena = arena;
+    wl_state->logger = { STR("wayland") };
 
     wl_state->display = wl_display_connect(0);
     if (wl_state->display == 0) {
@@ -143,7 +144,7 @@ function void wl_init(void) {
     wl_display_roundtrip(wl_state->display);
 
     DLLForEach(wl_state->globals.first, global) {
-        log_debugf("Global " FMT_STR ": name=" FMT_U32 ", version=" FMT_U32, FMT_STR_ARG(global->interface), global->name, global->version);
+        logger_debugf(wl_state->logger, "Global " FMT_STR ": name=" FMT_U32 ", version=" FMT_U32, FMT_STR_ARG(global->interface), global->name, global->version);
 
         if (global->interface == string_from_cstring(river_window_manager_v1_interface.name)) {
             if (global->version < 5) {
@@ -152,7 +153,7 @@ function void wl_init(void) {
 
             wl_state->window_manager = cast(river_window_manager_v1*)wl_registry_bind(wl_state->registry, global->name, &river_window_manager_v1_interface, 5);
             river_window_manager_v1_add_listener(wl_state->window_manager, &wl_river_window_manager_listener, 0);
-            log_debugf("-> Found and bound window manager.");
+            logger_debugf(wl_state->logger, "-> Found and bound window manager.");
         }
     }
 }

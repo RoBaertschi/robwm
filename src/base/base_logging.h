@@ -17,6 +17,19 @@ enum Log_Level {
 
 function String log_level_name(Log_Level level);
 function String log_level_color(Log_Level level);
+
+struct Logger {
+    String system;
+};
+
+function void logger_log(Logger logger, Log_Level level, String message);
+function void logger_vlogf(Logger logger, Log_Level level, char const *format, va_list list);
+
+#define X(name, string, _color) function void Glue(logger_, string)(Logger logger, String message); \
+                                function void Glue(Glue(logger_, string), f)(Logger logger, char const *format, ...);
+LOG_LEVELS
+#undef X
+
 function void log(Log_Level level, String message);
 function void vlogf(Log_Level level, char const *format, va_list list);
 

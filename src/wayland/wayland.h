@@ -16,6 +16,7 @@ function void wl_global_list_remove(Wl_Global_List *list, Wl_Global *global);
 
 struct Wl_State {
     Arena       *arena;
+    Logger      logger;
     wl_display  *display;
     wl_registry *registry;
 
