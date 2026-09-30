@@ -21,6 +21,7 @@ struct Wl_State {
     wl_registry *registry;
 
     river_window_manager_v1 *window_manager;
+    river_xkb_bindings_v1   *xkb_bindings;
 
     Wl_Global_List globals;
 };
@@ -30,3 +31,4 @@ variable_global Wl_State *wl_state;
 function void wl_init(void);
 function void wl_enter_loop(void);
 function river_window_manager_v1 *wl_get_window_manager(void);
+function river_xkb_bindings_v1 *wl_get_xkb_bindings(void);

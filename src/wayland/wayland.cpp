@@ -39,94 +39,6 @@ variable_global wl_registry_listener wl_registry_listener = {
     wl_registry_listener_global_remove,
 };
 
-function void wl_river_window_manager_listener_unavailable(void *data,
-               river_window_manager_v1 *river_window_manager)
-{
-    Unused(data);
-    Unused(river_window_manager);
-
-    logger_debugf(wl_state->logger, "Window manager is unavailable!");
-}
-
-function void wl_river_window_manager_listener_finished(void *data,
-               river_window_manager_v1 *river_window_manager)
-{
-    Unused(data);
-    Unused(river_window_manager);
-
-    logger_debugf(wl_state->logger, "Window manager is finished!\n");
-}
-
-function void wl_river_window_manager_listener_manage_start(void *data,
-               river_window_manager_v1 *river_window_manager)
-{
-    Unused(data);
-    Unused(river_window_manager);
-
-    logger_debugf(wl_state->logger, "Window manager manage start.\n");
-}
-
-function void wl_river_window_manager_listener_render_start(void *data,
-               river_window_manager_v1 *river_window_manager)
-{
-    Unused(data);
-    Unused(river_window_manager);
-    logger_debugf(wl_state->logger, "Window manager render start.\n");
-}
-
-function void wl_river_window_manager_listener_session_locked(void *data,
-               river_window_manager_v1 *river_window_manager)
-{
-    Unused(data);
-    Unused(river_window_manager);
-}
-
-function void wl_river_window_manager_listener_session_unlocked(void *data,
-               river_window_manager_v1 *river_window_manager)
-{
-    Unused(data);
-    Unused(river_window_manager);
-}
-
-function void wl_river_window_manager_listener_window(void *data,
-               river_window_manager_v1 *river_window_manager,
-               river_window_v1 *river_window)
-{
-    Unused(data);
-    Unused(river_window_manager);
-    Unused(river_window);
-}
-
-function void wl_river_window_manager_listener_output(void *data,
-               river_window_manager_v1 *river_window_manager,
-               river_output_v1 *river_output)
-{
-    Unused(data);
-    Unused(river_window_manager);
-    Unused(river_output);
-}
-
-function void wl_river_window_manager_listener_seat(void *data,
-               river_window_manager_v1 *river_window_manager,
-               river_seat_v1 *river_seat)
-{
-    Unused(data);
-    Unused(river_window_manager);
-    Unused(river_seat);
-}
-
-variable_global river_window_manager_v1_listener wl_river_window_manager_listener = {
-    wl_river_window_manager_listener_unavailable,
-    wl_river_window_manager_listener_finished,
-    wl_river_window_manager_listener_manage_start,
-    wl_river_window_manager_listener_render_start,
-    wl_river_window_manager_listener_session_locked,
-    wl_river_window_manager_listener_session_unlocked,
-    wl_river_window_manager_listener_window,
-    wl_river_window_manager_listener_output,
-    wl_river_window_manager_listener_seat,
-};
-
 function void wl_init(void) {
     auto arena = arena_alloc();
     wl_state = arena_new<Wl_State>(arena);
@@ -152,9 +64,23 @@ function void wl_init(void) {
             }
 
             wl_state->window_manager = cast(river_window_manager_v1*)wl_registry_bind(wl_state->registry, global->name, &river_window_manager_v1_interface, 5);
-            river_window_manager_v1_add_listener(wl_state->window_manager, &wl_river_window_manager_listener, 0);
-            logger_debugf(wl_state->logger, "-> Found and bound window manager.");
+            logger_debugf(wl_state->logger, "-> Found window manager.");
+        } else if (global->interface == string_from_cstring(river_xkb_bindings_v1_interface.name)) {
+            if (global->version < 3) {
+                fail("Unsupported river_xkb_bindings_v1 version " FMT_U32 ", expected at least version 3.", global->version);
+            }
+
+            wl_state->xkb_bindings = cast(river_xkb_bindings_v1*)wl_registry_bind(wl_state->registry, global->name, &river_xkb_bindings_v1_interface, 3);
+            logger_debugf(wl_state->logger, "-> Found window manager.");
         }
+    }
+
+    if (!wl_state->window_manager) {
+        fail("Missing river_window_manager_v1 global.");
+    }
+
+    if (!wl_state->xkb_bindings) {
+        fail("Missing river_xkb_bindings_v1 global.");
     }
 }
 
@@ -166,4 +92,8 @@ function void wl_enter_loop(void) {
 
 function river_window_manager_v1 *wl_get_window_manager(void) {
     return wl_state->window_manager;
+}
+
+function river_xkb_bindings_v1 *wl_get_xkb_bindings(void) {
+    return wl_state->xkb_bindings;
 }

@@ -17,5 +17,9 @@
       "WAYLAND_DISPLAY": "wayland-1",
       "WAYLAND_DEBUG": "1"
     }
+  },
+  {
+    "label": "Gen",
+    "command": "./gen.sh"
   }
 ]

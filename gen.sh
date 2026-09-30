@@ -9,6 +9,7 @@ WAYLAND_CLIENT_DATA_DIR="$(pkgconf --variable=pkgdatadir wayland-client)"
 
 PROTOCOLS=(
     "${RIVER_PROTOCOLS_DIR}/stable/river-window-management-v1.xml"
+    "${RIVER_PROTOCOLS_DIR}/stable/river-xkb-bindings-v1.xml"
     "${WAYLAND_CLIENT_DATA_DIR}/wayland.xml"
 )
 
