@@ -33,5 +33,13 @@ function_global int main(void) {
     binding->action.callback = spawn_alacritty_action;
     bm_binding_enable(binding);
 
+    wm_on_seat_added([](WM_Seat *seat) {
+        bm_add_seat(seat->river_seat);
+    });
+
+    wm_on_seat_removed([](WM_Seat *seat) {
+        // TODO
+    });
+
     wl_enter_loop();
 }

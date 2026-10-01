@@ -35,8 +35,7 @@ function void wm_river_seat_listener_wl_seat(void *data,
         wm_seat_list_remove(&wm_state->unnamed_seats, seat);
         wm_seat_list_push(&wm_state->seats, seat);
 
-        // TODO(robin): if more are needed, maybe add a hook to the system instead
-        bm_add_seat(seat->river_seat);
+        wm_state->added_callback(seat);
     } else {
         logger_errorf(wm_state->logger, "Could not find matching wl_seat " FMT_U32 " for a river_seat.", name);
     }
@@ -218,4 +217,11 @@ function void wm_init(void) {
     wm_state->logger = { STR("wm") };
 
     river_window_manager_v1_add_listener(wl_get_window_manager(), &wm_river_window_manager_listener, 0);
+}
+
+function void wm_on_seat_added(WM_On_Seat_Added_Callback added_callback) {
+    wm_state->added_callback = added_callback;
+}
+function void wm_on_seat_removed(WM_On_Seat_Removed_Callback removed_callback) {
+    wm_state->removed_callback = removed_callback;
 }
