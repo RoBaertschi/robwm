@@ -11,6 +11,15 @@
 #include "window_manager/window_manager_inc.cpp"
 
 #include <stdio.h>
+#include <spawn.h>
+
+function void spawn_alacritty_action(void *) {
+    int _pid;
+    extern char **environ;
+    char program[] = "alacritty";
+    char *const args[] = { program, 0 };
+    posix_spawnp(&_pid, "alacritty", 0, 0, args, environ);
+}
 
 function_global int main(void) {
     wl_init();
@@ -21,6 +30,7 @@ function_global int main(void) {
     shortcut.keysym = XKB_KEY_Return;
     shortcut.modifiers = BM_Modifier_Ctrl;
     auto binding = bm_binding_from_shortcut(shortcut);
+    binding->action.callback = spawn_alacritty_action;
     bm_binding_enable(binding);
 
     wl_enter_loop();
