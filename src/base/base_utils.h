@@ -163,6 +163,13 @@ function Uint operator ""_uint(unsigned long long value) { return cast(Uint)valu
 ((f)=(f)->next))
 #define SLLStackPop(f) SLLStackPop_N(f,next)
 
+// DLL with len
+
+#define DLLPushBackWithLen_NP(f,l,n,len,next,prev) Stmt(DLLPushBack_NP(f,l,n,next,prev); len += 1;)
+#define DLLPushBackWithLen(f,l,n,len) DLLPushBackWithLen_NP(f,l,n,len,next,prev)
+#define DLLRemoveWithLen_NP(f,l,n,len,next,prev) Stmt(DLLRemove_NP(f,l,n,next,prev); len -= 1;)
+#define DLLRemoveWithLen(f,l,n,len) DLLRemoveWithLen_NP(f,l,n,len,next,prev)
+
 // Defer
 
 // https://www.gingerbill.org/article/2015/08/19/defer-in-cpp/

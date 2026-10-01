@@ -1,11 +1,9 @@
 function void wm_seat_list_push(WM_Seat_List *list, WM_Seat *seat) {
-    DLLPushBack(list->first, list->last, seat);
-    list->len += 1;
+    DLLPushBackWithLen(list->first, list->last, seat, list->len);
 }
 
 function void wm_seat_list_remove(WM_Seat_List *list, WM_Seat *seat) {
-    DLLRemove(list->first, list->last, seat);
-    list->len -= 1;
+    DLLRemoveWithLen(list->first, list->last, seat, list->len);
 }
 
 variable_global WM_State *wm_state;
@@ -36,6 +34,9 @@ function void wm_river_seat_listener_wl_seat(void *data,
     if (seat->seat) {
         wm_seat_list_remove(&wm_state->unnamed_seats, seat);
         wm_seat_list_push(&wm_state->seats, seat);
+
+        // TODO(robin): if more are needed, maybe add a hook to the system instead
+        bm_add_seat(seat->river_seat);
     } else {
         logger_errorf(wm_state->logger, "Could not find matching wl_seat " FMT_U32 " for a river_seat.", name);
     }

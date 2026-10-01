@@ -1,21 +1,17 @@
 function void wl_global_list_push(Wl_Global_List *list, Wl_Global *global) {
-    DLLPushBack(list->first, list->last, global);
-    list->len += 1;
+    DLLPushBackWithLen(list->first, list->last, global, list->len);
 }
 
 function void wl_global_list_remove(Wl_Global_List *list, Wl_Global *global) {
-    DLLRemove(list->first, list->last, global);
-    list->len -= 1;
+    DLLRemoveWithLen(list->first, list->last, global, list->len);
 }
 
 function void wl_seat_list_push(Wl_Seat_List *list, Wl_Seat *seat) {
-    DLLPushBack(list->first, list->last, seat);
-    list->len += 1;
+    DLLPushBackWithLen(list->first, list->last, seat, list->len);
 }
 
 function void wl_seat_list_remove(Wl_Seat_List *list, Wl_Seat *seat) {
-    DLLRemove(list->first, list->last, seat);
-    list->len -= 1;
+    DLLRemoveWithLen(list->first, list->last, seat, list->len);
 }
 
 function void wl_registry_listener_global(void *data,

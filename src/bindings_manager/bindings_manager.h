@@ -27,7 +27,7 @@ typedef U32 BM_Modifiers;
 typedef U32 BM_Keysym; // equal to xkb_keysym_t
 
 union BM_Shortcut {
-    struct BM_Binding_Key_Pair {
+    struct {
         BM_Keysym    keysym;
         BM_Modifiers modifiers;
     };
@@ -47,24 +47,56 @@ struct BM_Action {
 
 function BM_Action bm_nil_action(void);
 
+struct BM_River_Binding {
+    BM_River_Binding     *bind_next, *bind_prev; // Per BM_Binding
+    BM_River_Binding     *seat_next, *seat_prev; // Per BM_Seat
+    river_xkb_binding_v1 *river_binding;
+};
+
+struct BM_River_Binding_List {
+    BM_River_Binding *first, *last;
+    Int              len;
+};
+
+function void bm_river_binding_list_push(BM_River_Binding_List *list, BM_River_Binding *binding);
+function void bm_river_binding_list_remove(BM_River_Binding_List *list, BM_River_Binding *binding);
+
 struct BM_Binding {
     BM_Shortcut    shortcut;
     BM_Binding_Key key;
     BM_Action      action;
 
-    river_xkb_binding_v1 *river_binding;
+    Bool enabled;
+
+    BM_River_Binding_List river_bindings;
 
     BM_Binding *hash_prev, *hash_next;
 };
+
+struct BM_River_Seat {
+    BM_River_Seat    *next, *prev;
+    river_seat_v1    *seat;
+    BM_River_Binding *first, *last;
+};
+
+struct BM_River_Seat_List {
+    BM_River_Seat *first, *last;
+};
+
+function void bm_river_seat_list_push(BM_River_Seat_List *list, BM_River_Seat *seat);
+function void bm_river_seat_list_remove(BM_River_Seat_List *list, BM_River_Seat *seat);
 
 struct BM_State {
     Arena  *arena;
     Logger logger;
 
+    BM_River_Seat_List  seats;
     Slice<BM_Binding *> bindings;
 };
 
 function void bm_init(void);
+function void bm_add_seat(river_seat_v1 *seat);
 function BM_Binding_Key bm_binding_key_from_shortcut(BM_Shortcut shortcut);
 function BM_Binding *bm_binding_from_key(BM_Binding_Key key);
 function BM_Binding *bm_binding_from_shortcut(BM_Shortcut shortcut);
+function void bm_binding_enable(BM_Binding *binding);
