@@ -8,6 +8,16 @@ function void wl_global_list_remove(Wl_Global_List *list, Wl_Global *global) {
     list->len -= 1;
 }
 
+function void wl_seat_list_push(Wl_Seat_List *list, Wl_Seat *seat) {
+    DLLPushBack(list->first, list->last, seat);
+    list->len += 1;
+}
+
+function void wl_seat_list_remove(Wl_Seat_List *list, Wl_Seat *seat) {
+    DLLRemove(list->first, list->last, seat);
+    list->len -= 1;
+}
+
 function void wl_registry_listener_global(void *data,
 		       wl_registry *wl_registry,
 		       U32 name,
@@ -56,23 +66,37 @@ function void wl_init(void) {
     wl_display_roundtrip(wl_state->display);
 
     DLLForEach(wl_state->globals.first, global) {
-        logger_debugf(wl_state->logger, "Global " FMT_STR ": name=" FMT_U32 ", version=" FMT_U32, FMT_STR_ARG(global->interface), global->name, global->version);
+        // logger_debugf(wl_state->logger, "Global " FMT_STR ": name=" FMT_U32 ", version=" FMT_U32, FMT_STR_ARG(global->interface), global->name, global->version);
 
-        if (global->interface == string_from_cstring(river_window_manager_v1_interface.name)) {
-            if (global->version < 5) {
-                fail("Unsupported river_window_manager_v1 version " FMT_U32 ", expected at least version 5.", global->version);
-            }
+        #define IF_MATCHES_INTERFACE(interface_name) if (global->interface == string_from_cstring(Glue(interface_name, _interface).name))
+        #define GLOBAL_CHECK_VERSION(interface_name, expected_version) \
+            Stmt(if (global->version < expected_version) { \
+                fail("Unsupported " #interface_name " version " FMT_U32 ", expected at least version " #expected_version ".", global->version); \
+            })
+
+        IF_MATCHES_INTERFACE(river_window_manager_v1) {
+            GLOBAL_CHECK_VERSION(river_window_manager_v1, 5);
 
             wl_state->window_manager = cast(river_window_manager_v1*)wl_registry_bind(wl_state->registry, global->name, &river_window_manager_v1_interface, 5);
             logger_debugf(wl_state->logger, "-> Found window manager.");
-        } else if (global->interface == string_from_cstring(river_xkb_bindings_v1_interface.name)) {
-            if (global->version < 3) {
-                fail("Unsupported river_xkb_bindings_v1 version " FMT_U32 ", expected at least version 3.", global->version);
-            }
+        } else IF_MATCHES_INTERFACE(river_xkb_bindings_v1) {
+            GLOBAL_CHECK_VERSION(river_xkb_bindings_v1, 3);
 
             wl_state->xkb_bindings = cast(river_xkb_bindings_v1*)wl_registry_bind(wl_state->registry, global->name, &river_xkb_bindings_v1_interface, 3);
-            logger_debugf(wl_state->logger, "-> Found window manager.");
+            logger_debugf(wl_state->logger, "-> Found xkb bindings.");
+        } else IF_MATCHES_INTERFACE(wl_seat) {
+            GLOBAL_CHECK_VERSION(wl_seat, 9);
+
+            auto seat    = arena_new<Wl_Seat>(wl_state->arena);
+            seat->seat   = cast(wl_seat *)wl_registry_bind(wl_state->registry, global->name, &wl_seat_interface, 9);
+            seat->global = global;
+
+            wl_seat_list_push(&wl_state->seats, seat);
+            logger_debugf(wl_state->logger, "-> Found wl seat " FMT_U32, global->name);
         }
+
+        #undef IF_MATCHES_INTERFACE
+        #undef GLOBAL_CHECK_VERSION
     }
 
     if (!wl_state->window_manager) {
@@ -88,6 +112,10 @@ function void wl_enter_loop(void) {
     log_infof("Entering infinite loop.");
     river_window_manager_v1_manage_dirty(wl_state->window_manager);
     while (wl_display_dispatch(wl_state->display) != -1) {}
+}
+
+function Wl_Seat_List *wl_get_seats(void) {
+    return &wl_state->seats;
 }
 
 function river_window_manager_v1 *wl_get_window_manager(void) {

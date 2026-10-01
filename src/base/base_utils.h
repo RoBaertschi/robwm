@@ -36,6 +36,7 @@
 #define Terabyte (1_u64 << 40)
 
 #define variable_global static
+#define variable_global_readonly const static
 #define variable_function_static static
 #define function static
 #define function_global

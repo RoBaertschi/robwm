@@ -1,4 +1,120 @@
-variable_global Wm_State *wm_state;
+function void wm_seat_list_push(WM_Seat_List *list, WM_Seat *seat) {
+    DLLPushBack(list->first, list->last, seat);
+    list->len += 1;
+}
+
+function void wm_seat_list_remove(WM_Seat_List *list, WM_Seat *seat) {
+    DLLRemove(list->first, list->last, seat);
+    list->len -= 1;
+}
+
+variable_global WM_State *wm_state;
+
+function void wm_river_seat_listener_removed(void *data,
+               river_seat_v1 *river_seat)
+{
+    Unused(data);
+    Unused(river_seat);
+}
+
+function void wm_river_seat_listener_wl_seat(void *data,
+               river_seat_v1 *river_seat,
+               U32 name)
+{
+    Unused(river_seat);
+    auto seat = cast(WM_Seat *)data;
+
+    auto seats = wl_get_seats();
+    DLLForEach(seats->first, wl_seat) {
+        if (wl_seat->global->name == name) {
+            seat->seat = wl_seat;
+            logger_debugf(wm_state->logger, "Found wl_seat " FMT_U32 " for river_seat.", name);
+            break;
+        }
+    }
+
+    if (seat->seat) {
+        wm_seat_list_remove(&wm_state->unnamed_seats, seat);
+        wm_seat_list_push(&wm_state->seats, seat);
+    } else {
+        logger_errorf(wm_state->logger, "Could not find matching wl_seat " FMT_U32 " for a river_seat.", name);
+    }
+}
+
+function void wm_river_seat_listener_pointer_enter(void *data,
+               river_seat_v1 *river_seat,
+               river_window_v1 *window)
+{
+    Unused(data);
+    Unused(river_seat);
+    Unused(window);
+}
+
+function void wm_river_seat_listener_pointer_leave(void *data,
+               river_seat_v1 *river_seat)
+{
+    Unused(data);
+    Unused(river_seat);
+}
+
+function void wm_river_seat_listener_window_interaction(void *data,
+               river_seat_v1 *river_seat,
+               river_window_v1 *river_window)
+{
+    Unused(data);
+    Unused(river_seat);
+    Unused(river_window);
+}
+
+function void wm_river_seat_listener_shell_surface_interaction(void *data,
+               river_seat_v1 *river_seat,
+               river_shell_surface_v1 *shell_surface)
+{
+    Unused(data);
+    Unused(river_seat);
+    Unused(shell_surface);
+}
+
+function void wm_river_seat_listener_op_delta(void *data,
+               river_seat_v1 *river_seat,
+               I32 dx,
+               I32 dy)
+{
+    Unused(data);
+    Unused(river_seat);
+    Unused(dx);
+    Unused(dy);
+}
+
+function void wm_river_seat_listener_op_release(void *data,
+               river_seat_v1 *river_seat)
+{
+    Unused(data);
+    Unused(river_seat);
+}
+
+function void wm_river_seat_listener_pointer_position(void *data,
+               river_seat_v1 *river_seat,
+               I32 x,
+               I32 y)
+{
+    Unused(data);
+    Unused(river_seat);
+    Unused(x);
+    Unused(y);
+}
+
+variable_global_readonly river_seat_v1_listener wm_river_seat_listener = {
+    wm_river_seat_listener_removed,
+    wm_river_seat_listener_wl_seat,
+    wm_river_seat_listener_pointer_enter,
+    wm_river_seat_listener_pointer_leave,
+    wm_river_seat_listener_window_interaction,
+    wm_river_seat_listener_shell_surface_interaction,
+    wm_river_seat_listener_op_delta,
+    wm_river_seat_listener_op_release,
+    wm_river_seat_listener_pointer_position,
+};
 
 function void wm_river_window_manager_listener_unavailable(void *data,
                river_window_manager_v1 *river_window_manager)
@@ -15,14 +131,14 @@ function void wm_river_window_manager_listener_finished(void *data,
     Unused(data);
     Unused(river_window_manager);
 
-    logger_debugf(wm_state->logger, "Window manager is finished!\n");
+    logger_debugf(wm_state->logger, "Window manager is finished!");
 }
 
 function void wm_river_window_manager_listener_manage_start(void *data,
                river_window_manager_v1 *river_window_manager)
 {
     Unused(data);
-    logger_debugf(wm_state->logger, "Window manager manage start.\n");
+    logger_debugf(wm_state->logger, "Window manager manage start.");
     river_window_manager_v1_manage_finish(river_window_manager);
 }
 
@@ -30,7 +146,7 @@ function void wm_river_window_manager_listener_render_start(void *data,
                river_window_manager_v1 *river_window_manager)
 {
     Unused(data);
-    logger_debugf(wm_state->logger, "Window manager render start.\n");
+    logger_debugf(wm_state->logger, "Window manager render start.");
     river_window_manager_v1_render_finish(river_window_manager);
 }
 
@@ -72,10 +188,17 @@ function void wm_river_window_manager_listener_seat(void *data,
 {
     Unused(data);
     Unused(river_window_manager);
-    Unused(river_seat);
+
+    auto seat = arena_new<WM_Seat>(wm_state->arena);
+    seat->river_seat = river_seat;
+    wm_seat_list_push(&wm_state->unnamed_seats, seat);
+
+    river_seat_v1_add_listener(seat->river_seat, &wm_river_seat_listener, seat);
+
+    logger_debugf(wm_state->logger, "Got new river seat");
 }
 
-variable_global river_window_manager_v1_listener wm_river_window_manager_listener = {
+variable_global_readonly river_window_manager_v1_listener wm_river_window_manager_listener = {
     wm_river_window_manager_listener_unavailable,
     wm_river_window_manager_listener_finished,
     wm_river_window_manager_listener_manage_start,
@@ -89,7 +212,7 @@ variable_global river_window_manager_v1_listener wm_river_window_manager_listene
 
 function void wm_init(void) {
     Arena *arena = arena_alloc();
-    wm_state = arena_new<Wm_State>(arena);
+    wm_state = arena_new<WM_State>(arena);
     wm_state->arena = arena;
     wm_state->logger = { STR("wm") };
 

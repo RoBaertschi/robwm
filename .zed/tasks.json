@@ -14,6 +14,15 @@
     "save": "all",
     "reveal": "no_focus",
     "env": {
+      "WAYLAND_DISPLAY": "wayland-1"
+    }
+  },
+  {
+    "label": "Run (Wayland Debug)",
+    "command": "./build.sh run",
+    "save": "all",
+    "reveal": "no_focus",
+    "env": {
       "WAYLAND_DISPLAY": "wayland-1",
       "WAYLAND_DEBUG": "1"
     }
