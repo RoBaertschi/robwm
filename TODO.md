@@ -1,1 +1,2 @@
-- [ ] wl_seat removal handling
+- [x] wl_seat removal handling
+- [ ] When wl_seat usage is actually known, redesign the wl_seat cleanup api.
