@@ -11,8 +11,14 @@ variable_global WM_State *wm_state;
 function void wm_river_seat_listener_removed(void *data,
                river_seat_v1 *river_seat)
 {
-    Unused(data);
     Unused(river_seat);
+
+    auto seat = cast(WM_Seat *)data;
+    bm_remove_seat(seat->river_seat);
+
+    wm_seat_list_remove(&wm_state->seats, seat);
+    (*seat) = {}; // clear it
+    wm_seat_list_push(&wm_state->free_seats, seat);
 }
 
 function void wm_river_seat_listener_wl_seat(void *data,
@@ -190,7 +196,14 @@ function void wm_river_window_manager_listener_seat(void *data,
     Unused(data);
     Unused(river_window_manager);
 
-    auto seat = arena_new<WM_Seat>(wm_state->arena);
+    WM_Seat *seat;
+    if (0 < wm_state->free_seats.len) {
+        seat = wm_state->free_seats.first;
+        Assert(seat);
+        wm_seat_list_remove(&wm_state->free_seats, seat);
+    } else {
+        seat = arena_new<WM_Seat>(wm_state->arena);
+    }
     seat->river_seat = river_seat;
     wm_seat_list_push(&wm_state->unnamed_seats, seat);
 
@@ -216,6 +229,21 @@ function void wm_init(void) {
     wm_state = arena_new<WM_State>(arena);
     wm_state->arena = arena;
     wm_state->logger = { STR("wm") };
+
+    wl_set_hook_wl_seat_removed([](void *data, Wl_Seat *wl_seat) {
+        Unused(data);
+
+        WM_Seat *seat = 0;
+        DLLForEach(wm_state->seats.first, current_seat) {
+            if (current_seat->seat == wl_seat) {
+                seat = current_seat;
+                break;
+            }
+        }
+
+        seat->seat = 0;
+        logger_debugf(wm_state->logger, "Removed wl seat.");
+    }, 0);
 
     river_window_manager_v1_add_listener(wl_get_window_manager(), &wm_river_window_manager_listener, 0);
 }

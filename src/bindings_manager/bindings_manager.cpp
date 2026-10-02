@@ -74,7 +74,17 @@ variable_global_readonly river_xkb_binding_v1_listener bm_river_xkb_binding_list
 };
 
 function void bm_add_binding_to_seat(BM_River_Seat *seat, BM_Binding *binding) {
-    auto river_binding = arena_new<BM_River_Binding>(bm_state->arena);
+    BM_River_Binding *river_binding = 0;
+    if (bm_state->free_river_bindings.first) {
+        river_binding = bm_state->free_river_bindings.first;
+        bm_river_binding_list_remove(&bm_state->free_river_bindings, river_binding);
+        *river_binding = {};
+    } else {
+        river_binding = arena_new<BM_River_Binding>(bm_state->arena);
+    }
+
+    river_binding->binding = binding;
+
     auto bindings = wl_get_xkb_bindings();
     river_binding->river_binding = river_xkb_bindings_v1_get_xkb_binding(
         bindings,
@@ -96,7 +106,14 @@ function void bm_add_binding_to_seat(BM_River_Seat *seat, BM_Binding *binding) {
 }
 
 function void bm_add_seat(river_seat_v1 *river_seat) {
-    auto seat = arena_new<BM_River_Seat>(bm_state->arena);
+    BM_River_Seat *seat = 0;
+    if (bm_state->free_seats.first) {
+        seat = bm_state->free_seats.first;
+        bm_river_seat_list_remove(&bm_state->free_seats, seat);
+        *seat = {};
+    } else {
+        seat = arena_new<BM_River_Seat>(bm_state->arena);
+    }
     seat->seat = river_seat;
 
     for (auto binding_bucket : bm_state->bindings) {
@@ -106,6 +123,39 @@ function void bm_add_seat(river_seat_v1 *river_seat) {
     }
 
     bm_river_seat_list_push(&bm_state->seats, seat);
+}
+
+function void bm_remove_seat(river_seat_v1 *river_seat) {
+    BM_River_Seat *seat = 0;
+    DLLForEach(bm_state->seats.first, bm_river_seat) {
+        if (bm_river_seat->seat == river_seat) {
+            seat = bm_river_seat;
+            break;
+        }
+    }
+
+    if (seat) {
+        BM_River_Binding *next = 0;
+        for (auto river_binding = seat->first; river_binding; river_binding = next) {
+            next = river_binding->seat_next;
+
+            river_xkb_binding_v1_destroy(river_binding->river_binding);
+            river_binding->river_binding = 0;
+
+            bm_river_binding_list_remove(&river_binding->binding->river_bindings, river_binding);
+            DLLRemove_NP(seat->first, seat->last, river_binding, seat_next, seat_prev);
+
+            *river_binding = {};
+            bm_river_binding_list_push(&bm_state->free_river_bindings, river_binding);
+        }
+
+        river_seat_v1_destroy(seat->seat);
+
+        bm_river_seat_list_remove(&bm_state->seats, seat);
+        bm_river_seat_list_push(&bm_state->free_seats, seat);
+    } else {
+        logger_errorf(bm_state->logger, "Could not find river seat to remove: %p", river_seat);
+    }
 }
 
 function BM_Binding_Key bm_binding_key_from_shortcut(BM_Shortcut shortcut) {

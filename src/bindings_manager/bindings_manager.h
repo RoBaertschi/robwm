@@ -47,10 +47,13 @@ struct BM_Action {
 
 function BM_Action bm_nil_action(void);
 
+struct BM_Binding;
+
 struct BM_River_Binding {
     BM_River_Binding     *bind_next, *bind_prev; // Per BM_Binding
     BM_River_Binding     *seat_next, *seat_prev; // Per BM_Seat
     river_xkb_binding_v1 *river_binding;
+    BM_Binding           *binding;
 };
 
 struct BM_River_Binding_List {
@@ -92,10 +95,14 @@ struct BM_State {
 
     BM_River_Seat_List  seats;
     Slice<BM_Binding *> bindings;
+
+    BM_River_Seat_List    free_seats;
+    BM_River_Binding_List free_river_bindings;
 };
 
 function void bm_init(void);
 function void bm_add_seat(river_seat_v1 *seat);
+function void bm_remove_seat(river_seat_v1 *seat);
 function BM_Binding_Key bm_binding_key_from_shortcut(BM_Shortcut shortcut);
 function BM_Binding *bm_binding_from_key(BM_Binding_Key key);
 function BM_Binding *bm_binding_from_shortcut(BM_Shortcut shortcut);
