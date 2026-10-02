@@ -26,13 +26,7 @@ struct Wl_Global {
     struct Wl_Seat *seat; // if kind == Seat
 };
 
-struct Wl_Global_List {
-    Wl_Global *first, *last;
-    Int       len;
-};
-
-function void wl_global_list_push(Wl_Global_List *list, Wl_Global *global);
-function void wl_global_list_remove(Wl_Global_List *list, Wl_Global *global);
+typedef List<Wl_Global> Wl_Global_List;
 
 struct Wl_Seat {
     Wl_Seat   *next, *prev;
@@ -40,13 +34,7 @@ struct Wl_Seat {
     Wl_Global *global;
 };
 
-struct Wl_Seat_List {
-    Wl_Seat *first, *last;
-    Int     len;
-};
-
-function void wl_seat_list_push(Wl_Seat_List *list, Wl_Seat *seat);
-function void wl_seat_list_remove(Wl_Seat_List *list, Wl_Seat *seat);
+typedef List<Wl_Seat> Wl_Seat_List;
 
 // Hooks
 

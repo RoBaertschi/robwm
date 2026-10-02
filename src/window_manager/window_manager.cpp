@@ -1,11 +1,3 @@
-function void wm_seat_list_push(WM_Seat_List *list, WM_Seat *seat) {
-    DLLPushBackWithLen(list->first, list->last, seat, list->len);
-}
-
-function void wm_seat_list_remove(WM_Seat_List *list, WM_Seat *seat) {
-    DLLRemoveWithLen(list->first, list->last, seat, list->len);
-}
-
 variable_global WM_State *wm_state;
 
 function void wm_river_seat_listener_removed(void *data,
@@ -16,9 +8,9 @@ function void wm_river_seat_listener_removed(void *data,
     auto seat = cast(WM_Seat *)data;
     bm_remove_seat(seat->river_seat);
 
-    wm_seat_list_remove(&wm_state->seats, seat);
+    list_remove(&wm_state->seats, seat);
     (*seat) = {}; // clear it
-    wm_seat_list_push(&wm_state->free_seats, seat);
+    list_push(&wm_state->free_seats, seat);
 }
 
 function void wm_river_seat_listener_wl_seat(void *data,
@@ -38,8 +30,8 @@ function void wm_river_seat_listener_wl_seat(void *data,
     }
 
     if (seat->seat) {
-        wm_seat_list_remove(&wm_state->unnamed_seats, seat);
-        wm_seat_list_push(&wm_state->seats, seat);
+        list_remove(&wm_state->unnamed_seats, seat);
+        list_push(&wm_state->seats, seat);
 
         // TODO(robin): if more are needed, maybe add a hook to the system instead
         bm_add_seat(seat->river_seat);
@@ -200,12 +192,12 @@ function void wm_river_window_manager_listener_seat(void *data,
     if (0 < wm_state->free_seats.len) {
         seat = wm_state->free_seats.first;
         Assert(seat);
-        wm_seat_list_remove(&wm_state->free_seats, seat);
+        list_remove(&wm_state->free_seats, seat);
     } else {
         seat = arena_new<WM_Seat>(wm_state->arena);
     }
     seat->river_seat = river_seat;
-    wm_seat_list_push(&wm_state->unnamed_seats, seat);
+    list_push(&wm_state->unnamed_seats, seat);
 
     river_seat_v1_add_listener(seat->river_seat, &wm_river_seat_listener, seat);
 

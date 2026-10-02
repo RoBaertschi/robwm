@@ -4,13 +4,7 @@ struct WM_Seat {
     river_seat_v1 *river_seat;
 };
 
-struct WM_Seat_List {
-    WM_Seat *first, *last;
-    Int     len;
-};
-
-function void wm_seat_list_push(WM_Seat_List *list, WM_Seat *seat);
-function void wm_seat_list_remove(WM_Seat_List *list, WM_Seat *seat);
+typedef List<WM_Seat> WM_Seat_List;
 
 struct WM_State {
     Arena  *arena;

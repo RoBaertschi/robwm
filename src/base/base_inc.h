@@ -5,6 +5,7 @@
 #include "base_types.h"
 #include "base_utils.h"
 #include "base_functions.h"
+#include "base_list.h"
 #include "base_slice.h"
 #include "base_string.h"
 #include "base_virtual.h"

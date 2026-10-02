@@ -4,24 +4,6 @@ variable_global String wl_global_kind_string_name[Wl_Global_Kind__MAX] = {
     #undef X
 };
 
-// Lists
-
-function void wl_global_list_push(Wl_Global_List *list, Wl_Global *global) {
-    DLLPushBackWithLen(list->first, list->last, global, list->len);
-}
-
-function void wl_global_list_remove(Wl_Global_List *list, Wl_Global *global) {
-    DLLRemoveWithLen(list->first, list->last, global, list->len);
-}
-
-function void wl_seat_list_push(Wl_Seat_List *list, Wl_Seat *seat) {
-    DLLPushBackWithLen(list->first, list->last, seat, list->len);
-}
-
-function void wl_seat_list_remove(Wl_Seat_List *list, Wl_Seat *seat) {
-    DLLRemoveWithLen(list->first, list->last, seat, list->len);
-}
-
 // Hooks
 
 #define X(name, sc_name, _T)\
@@ -58,7 +40,7 @@ function void wl_registry_listener_global(void *data,
     Wl_Global *global = 0;
     if (wl_state->free_globals.first) {
         global = wl_state->free_globals.first;
-        wl_global_list_remove(&wl_state->free_globals, global);
+        list_remove(&wl_state->free_globals, global);
         *global = {};
     } else {
         global = arena_new<Wl_Global>(wl_state->arena);
@@ -68,7 +50,7 @@ function void wl_registry_listener_global(void *data,
     global->interface = arena_string_clone(wl_state->arena, string_from_cstring(interface));
     global->version = version;
 
-    wl_global_list_push(&wl_state->globals, global);
+    list_push(&wl_state->globals, global);
 
     #define IF_MATCHES_INTERFACE(interface_name) if (global->interface == string_from_cstring(Glue(interface_name, _interface).name))
     #define GLOBAL_CHECK_VERSION(interface_name, expected_version) \
@@ -95,7 +77,7 @@ function void wl_registry_listener_global(void *data,
         Wl_Seat *seat = 0;
         if (wl_state->free_seats.first) {
             seat = wl_state->free_seats.first;
-            wl_seat_list_remove(&wl_state->free_seats, seat);
+            list_remove(&wl_state->free_seats, seat);
             *seat = {};
         } else {
            seat = arena_new<Wl_Seat>(wl_state->arena);
@@ -103,7 +85,7 @@ function void wl_registry_listener_global(void *data,
         seat->seat   = cast(wl_seat *)wl_registry_bind(wl_state->registry, global->name, &wl_seat_interface, 9);
         seat->global = global;
 
-        wl_seat_list_push(&wl_state->seats, seat);
+        list_push(&wl_state->seats, seat);
         logger_debugf(wl_state->logger, "-> Found wl seat " FMT_U32, global->name);
 
         wl_call_hook_wl_seat_added(seat);
@@ -145,8 +127,8 @@ function void wl_registry_listener_global_remove(void *data,
             break;
         case Wl_Global_Kind__MAX:
         case Wl_Global_Kind_Unknown: // Note any global here is also not bound, so no release needed
-            wl_global_list_remove(&wl_state->globals, global);
-            wl_global_list_push(&wl_state->free_globals, global);
+            list_remove(&wl_state->globals, global);
+            list_push(&wl_state->free_globals, global);
             logger_warnf(wl_state->logger, "Compositor removed unknown global " FMT_U32 ". Removing it too.", name);
             break;
         }

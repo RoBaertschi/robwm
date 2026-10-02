@@ -56,13 +56,7 @@ struct BM_River_Binding {
     BM_Binding           *binding;
 };
 
-struct BM_River_Binding_List {
-    BM_River_Binding *first, *last;
-    Int              len;
-};
-
-function void bm_river_binding_list_push(BM_River_Binding_List *list, BM_River_Binding *binding);
-function void bm_river_binding_list_remove(BM_River_Binding_List *list, BM_River_Binding *binding);
+typedef List<BM_River_Binding, &BM_River_Binding::bind_next, &BM_River_Binding::bind_prev> BM_River_Binding_List;
 
 struct BM_Binding {
     BM_Shortcut    shortcut;
@@ -82,12 +76,7 @@ struct BM_River_Seat {
     BM_River_Binding *first, *last;
 };
 
-struct BM_River_Seat_List {
-    BM_River_Seat *first, *last;
-};
-
-function void bm_river_seat_list_push(BM_River_Seat_List *list, BM_River_Seat *seat);
-function void bm_river_seat_list_remove(BM_River_Seat_List *list, BM_River_Seat *seat);
+typedef List<BM_River_Seat> BM_River_Seat_List;
 
 struct BM_State {
     Arena  *arena;
