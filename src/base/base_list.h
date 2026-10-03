@@ -38,3 +38,15 @@ function void list_remove(List<Node, Next, Prev> *list, Node *node) {
         node->*Prev->*Next = node->*Next;
     }
 }
+
+template <typename Node, Node *Node::* Next = &Node::next, Node *Node::* Prev = &Node::prev>
+function Node *list_pop_front(List<Node, Next, Prev> *list) {
+    Node *result = 0;
+
+    if (list->first) {
+        result = list->first;
+        list_remove(list, result);
+    }
+
+    return result;
+}
