@@ -167,3 +167,45 @@ function String arena_string_clone(Arena *arena, String string) {
 
     return result;
 }
+
+function Arena_Temp arena_temp_begin(Arena *arena) {
+    Arena_Temp temp = {
+        arena,
+        arena->curr->base_pos + arena->curr->used,
+    };
+    return temp;
+}
+
+function void arena_temp_end(Arena_Temp temp) {
+    arena_pop_to(temp.arena, temp.pos);
+}
+
+#define ARENA_MAX_TEMPORARY_ARENAS 2
+
+variable_global_thread_local Arena *arena_temporary_arenas[ARENA_MAX_TEMPORARY_ARENAS];
+
+function Arena *_arena_get_temporary_arena(Int count, Arena **arenas) {
+    Arena *found_arena = 0;
+
+    for (Int i = 0; i < ARENA_MAX_TEMPORARY_ARENAS; i++) {
+
+        for (Int j = 0; j < count; j++) {
+            if (arenas[j] == arena_temporary_arenas[i]) {
+                goto already_there;
+            }
+        }
+
+        if (!arena_temporary_arenas[i]) {
+            arena_temporary_arenas[i] = arena_alloc();
+        }
+
+        found_arena = arena_temporary_arenas[i];
+        break;
+
+        already_there:;
+    }
+
+    Assert(found_arena);
+
+    return found_arena;
+}

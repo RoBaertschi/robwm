@@ -52,4 +52,32 @@ function Slice<T> arena_make(Arena *arena, Int count) {
     return result;
 }
 
+template <typename T>
+function T *arena_make_array(Arena *arena, Int count) {
+    auto result = _arena_push_aligned(arena, sizeof(T) * cast(Uint)count, alignof(T));
+    return cast(T *)result.data;
+}
+
 function String arena_string_clone(Arena *arena, String string);
+
+struct Arena_Temp {
+    Arena *arena;
+    Uint  pos;
+};
+
+function Arena_Temp arena_temp_begin(Arena *arena);
+function void arena_temp_end(Arena_Temp temp);
+
+struct Arena_Temp_Guard : Arena_Temp {
+    Arena_Temp_Guard(Arena_Temp arena_temp) : Arena_Temp(arena_temp) {}
+    ~Arena_Temp_Guard() {
+        arena_temp_end(*this);
+    }
+};
+
+#define ARENA_TEMP_GUARD(arena) auto DEFER(_arena_guard_) = arena_temp_begin(arena)
+
+function Arena *_arena_get_temporary_arena(Int count, Arena **arenas);
+
+
+#define TEMP_ARENA_GUARD(...) Arena_Temp_Guard{arena_temp_begin(_arena_get_temporary_arena(ArrayCount((Arena*[]){ __VA_ARGS__ }), (Arena*[]){ __VA_ARGS__ }))}

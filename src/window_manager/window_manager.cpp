@@ -45,6 +45,23 @@ function void wm_release_string_parts(WM_String_Parts parts) {
     }
 }
 
+function String wm_string_from_string_parts(Arena *arena, WM_String_Parts parts) {
+    auto string_data = arena_make_array<U8>(arena, parts.len * WM_STRING_PART_SIZE);
+
+    Int i = 0;
+    DLLForEach(parts.first, part) {
+        Uint len_to_copy = cast(Uint)clamp_bot(cast(Int)WM_STRING_PART_SIZE, part->len);
+        MemoryCopy(string_data + i, part->buffer, len_to_copy);
+        i += cast(Int)len_to_copy;
+    }
+
+    arena_pop(arena, (parts.len * WM_STRING_PART_SIZE) - i);
+    return {
+        string_data,
+        i,
+    };
+}
+
 function void wm_push_command(WM_Command command) {
     auto command_node = list_pop_front(&wm_state->free_commands);
     if (!command_node) {
@@ -115,6 +132,11 @@ function void wm_river_window_listener_title(
     auto window = cast(WM_Window *)data;
     wm_release_string_parts(window->title);
     window->title = wm_string_parts_from_cstring(title);
+
+    auto temp = TEMP_ARENA_GUARD();
+    logger_debugf(wm_state->logger,
+        "Got window title " FMT_STR ".",
+        FMT_STR_ARG(wm_string_from_string_parts(temp.arena, window->title)));
 }
 
 function void wm_river_window_listener_parent(

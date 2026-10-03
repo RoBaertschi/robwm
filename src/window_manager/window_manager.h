@@ -13,6 +13,7 @@ function WM_String_Part *wm_new_string_part(void);
 function WM_String_Parts wm_string_parts_from_cstring(char const *cstring);
 function WM_String_Parts wm_string_parts_from_string(String string);
 function void wm_release_string_parts(WM_String_Parts parts);
+function String wm_string_from_string_parts(Arena *arena, WM_String_Parts parts);
 
 struct WM_Output {
     WM_Output *next, *prev;
