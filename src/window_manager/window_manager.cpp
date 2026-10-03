@@ -234,6 +234,8 @@ function void wm_river_seat_listener_removed(void *data,
     auto seat = cast(WM_Seat *)data;
     bm_remove_seat(seat->river_seat);
 
+    river_seat_v1_destroy(seat->river_seat);
+
     list_remove(&wm_state->seats, seat);
     (*seat) = {}; // clear it
     list_push(&wm_state->free_seats, seat);

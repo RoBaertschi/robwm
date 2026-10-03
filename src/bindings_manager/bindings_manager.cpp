@@ -129,8 +129,6 @@ function void bm_remove_seat(river_seat_v1 *river_seat) {
             list_push(&bm_state->free_river_bindings, river_binding);
         }
 
-        river_seat_v1_destroy(seat->seat);
-
         list_remove(&bm_state->seats, seat);
         list_push(&bm_state->free_seats, seat);
     } else {
