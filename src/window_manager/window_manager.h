@@ -22,7 +22,8 @@ typedef List<WM_Seat> WM_Seat_List;
 
 // X(name)
 #define WM_COMMANDS \
-    X(Manage_Window_Added)
+    X(Manage_Window_Added)\
+    X(Manage_Window_Closed)
 
 enum WM_Command_Kind {
     #define X(name) Glue(WM_Command_, name),

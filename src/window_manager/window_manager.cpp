@@ -11,6 +11,221 @@ function void wm_push_command(WM_Command command) {
     list_push(&wm_state->commands, command_node);
 }
 
+function void wm_river_window_listener_closed(
+    void *data,
+    river_window_v1 *river_window)
+{
+    Unused(river_window);
+    auto window = cast(WM_Window *)data;
+    wm_push_command({ WM_Command_Manage_Window_Closed, window });
+}
+
+function void wm_river_window_listener_dimensions_hint(
+    void *data,
+    river_window_v1 *river_window,
+    I32 min_width,
+    I32 min_height,
+    I32 max_width,
+    I32 max_height)
+{
+    Unused(data);
+    Unused(river_window);
+    Unused(min_width);
+    Unused(min_height);
+    Unused(max_width);
+    Unused(max_height);
+}
+
+function void wm_river_window_listener_dimensions(
+    void *data,
+    river_window_v1 *river_window,
+    I32 width,
+    I32 height)
+{
+    Unused(data);
+    Unused(river_window);
+    Unused(width);
+    Unused(height);
+}
+
+function void wm_river_window_listener_app_id(
+    void *data,
+    river_window_v1 *river_window,
+    char const *app_id)
+{
+    Unused(data);
+    Unused(river_window);
+    Unused(app_id);
+}
+
+function void wm_river_window_listener_title(
+    void *data,
+    river_window_v1 *river_window,
+    char const *title)
+{
+    Unused(data);
+    Unused(river_window);
+    Unused(title);
+}
+
+function void wm_river_window_listener_parent(
+    void *data,
+    river_window_v1 *river_window,
+    river_window_v1 *parent)
+{
+    Unused(data);
+    Unused(river_window);
+    Unused(parent);
+}
+
+function void wm_river_window_listener_decoration_hint(
+    void *data,
+    river_window_v1 *river_window,
+    U32 hint)
+{
+    Unused(data);
+    Unused(river_window);
+    Unused(hint);
+}
+
+function void wm_river_window_listener_pointer_move_requested(
+    void *data,
+    river_window_v1 *river_window,
+    river_seat_v1 *seat)
+{
+    Unused(data);
+    Unused(river_window);
+    Unused(seat);
+}
+
+function void wm_river_window_listener_pointer_resize_requested(
+    void *data,
+    river_window_v1 *river_window,
+    river_seat_v1 *seat,
+    U32 edges)
+{
+    Unused(data);
+    Unused(river_window);
+    Unused(seat);
+    Unused(edges);
+}
+
+function void wm_river_window_listener_show_window_menu_requested(
+    void *data,
+    river_window_v1 *river_window,
+    I32 x,
+    I32 y)
+{
+    Unused(data);
+    Unused(river_window);
+    Unused(x);
+    Unused(y);
+}
+
+function void wm_river_window_listener_maximize_requested(
+    void *data,
+    river_window_v1 *river_window)
+{
+    Unused(data);
+    Unused(river_window);
+}
+
+function void wm_river_window_listener_unmaximize_requested(
+    void *data,
+    river_window_v1 *river_window)
+{
+    Unused(data);
+    Unused(river_window);
+}
+
+function void wm_river_window_listener_fullscreen_requested(
+    void *data,
+    river_window_v1 *river_window,
+    river_output_v1 *river_output)
+{
+    Unused(data);
+    Unused(river_window);
+    Unused(river_output);
+}
+
+function void wm_river_window_listener_exit_fullscreen_requested(
+    void *data,
+    river_window_v1 *river_window)
+{
+    Unused(data);
+    Unused(river_window);
+}
+
+function void wm_river_window_listener_minimize_requested(
+    void *data,
+    river_window_v1 *river_window)
+{
+    Unused(data);
+    Unused(river_window);
+}
+
+function void wm_river_window_listener_unreliable_pid(
+    void *data,
+    river_window_v1 *river_window,
+    I32 pid)
+{
+    Unused(data);
+    Unused(river_window);
+    Unused(pid);
+}
+
+function void wm_river_window_listener_presentation_hint(
+    void *data,
+    river_window_v1 *river_window,
+    U32 hint)
+{
+    Unused(data);
+    Unused(river_window);
+    Unused(hint);
+}
+
+function void wm_river_window_listener_identifier(
+    void *data,
+    river_window_v1 *river_window,
+    char const *identifier)
+{
+    Unused(data);
+    Unused(river_window);
+    Unused(identifier);
+}
+
+function void wm_river_window_listener_capture_sessions(
+    void *data,
+    river_window_v1 *river_window,
+    U32 count)
+{
+    Unused(data);
+    Unused(river_window);
+    Unused(count);
+}
+
+variable_global_readonly river_window_v1_listener wm_river_window_listener = {
+    wm_river_window_listener_closed,
+    wm_river_window_listener_dimensions_hint,
+    wm_river_window_listener_dimensions,
+    wm_river_window_listener_app_id,
+    wm_river_window_listener_title,
+    wm_river_window_listener_parent,
+    wm_river_window_listener_decoration_hint,
+    wm_river_window_listener_pointer_move_requested,
+    wm_river_window_listener_pointer_resize_requested,
+    wm_river_window_listener_show_window_menu_requested,
+    wm_river_window_listener_maximize_requested,
+    wm_river_window_listener_unmaximize_requested,
+    wm_river_window_listener_fullscreen_requested,
+    wm_river_window_listener_exit_fullscreen_requested,
+    wm_river_window_listener_minimize_requested,
+    wm_river_window_listener_unreliable_pid,
+    wm_river_window_listener_presentation_hint,
+    wm_river_window_listener_identifier,
+    wm_river_window_listener_capture_sessions,
+};
+
 function void wm_river_seat_listener_removed(void *data,
                river_seat_v1 *river_seat)
 {
@@ -155,12 +370,22 @@ function void wm_river_window_manager_listener_manage_start(void *data,
         next = command_node->next;
 
         auto command = command_node->command;
+        auto window  = command.window;
 
         Bool handled = false;
 
         switch (command.kind) {
         case WM_Command_Manage_Window_Added: {
-            river_window_v1_propose_dimensions(command.window->window, 0, 0);
+            river_window_v1_propose_dimensions(window->window, 0, 0);
+            handled = true;
+            break;
+        case WM_Command_Manage_Window_Closed:
+            logger_debugf(wm_state->logger, "Window closed.");
+
+            list_remove(&wm_state->windows, window);
+            river_window_v1_destroy(window->window);
+            *window = {};
+            list_push(&wm_state->free_windows, window);
             handled = true;
             break;
         }
@@ -169,6 +394,7 @@ function void wm_river_window_manager_listener_manage_start(void *data,
 
         if (handled) {
             list_remove(&wm_state->commands, command_node);
+            list_push(&wm_state->free_commands, command_node);
         }
     }
 
@@ -214,6 +440,8 @@ function void wm_river_window_manager_listener_window(void *data,
 
     list_push(&wm_state->windows, window);
     logger_debugf(wm_state->logger, "New window.");
+
+    river_window_v1_add_listener(river_window, &wm_river_window_listener, window);
 
     wm_push_command({ WM_Command_Manage_Window_Added, window });
 }
