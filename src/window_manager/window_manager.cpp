@@ -1,5 +1,50 @@
 variable_global WM_State *wm_state;
 
+function WM_String_Part *wm_new_string_part(void) {
+    auto string_part = list_pop_front(&wm_state->free_string_parts);
+    if (!string_part) {
+        string_part = arena_new<WM_String_Part>(wm_state->arena);
+    }
+    return string_part;
+}
+
+function WM_String_Parts wm_string_parts_from_cstring(char const *cstring) {
+    return wm_string_parts_from_string(string_from_cstring(cstring));
+}
+
+function WM_String_Parts wm_string_parts_from_string(String string) {
+    Int part_count = string.len / WM_STRING_PART_SIZE;
+    if (string.len % WM_STRING_PART_SIZE != 0) {
+        part_count += 1;
+    }
+
+    WM_String_Parts parts = {};
+
+    for (Int i = 0; i < part_count; i++) {
+        Int index = i * WM_STRING_PART_SIZE;
+        auto new_string_part = wm_new_string_part();
+
+        Int copy_len = clamp_top(
+                        clamp_bot(0_int, string.len - index),
+                        cast(Int)WM_STRING_PART_SIZE);
+
+        MemoryCopy(new_string_part->buffer, string.data + index, cast(Uint)copy_len);
+
+        new_string_part->len = copy_len;
+        list_push(&parts, new_string_part);
+    }
+
+    return parts;
+}
+
+function void wm_release_string_parts(WM_String_Parts parts) {
+    DLLForEachSafe(parts.first, part) {
+        list_remove(&parts, part);
+        *part = {};
+        list_push(&wm_state->free_string_parts, part);
+    }
+}
+
 function void wm_push_command(WM_Command command) {
     auto command_node = list_pop_front(&wm_state->free_commands);
     if (!command_node) {
@@ -53,9 +98,11 @@ function void wm_river_window_listener_app_id(
     river_window_v1 *river_window,
     char const *app_id)
 {
-    Unused(data);
     Unused(river_window);
-    Unused(app_id);
+
+    auto window = cast(WM_Window *)data;
+    wm_release_string_parts(window->app_id);
+    window->app_id = wm_string_parts_from_cstring(app_id);
 }
 
 function void wm_river_window_listener_title(
@@ -63,9 +110,11 @@ function void wm_river_window_listener_title(
     river_window_v1 *river_window,
     char const *title)
 {
-    Unused(data);
     Unused(river_window);
-    Unused(title);
+
+    auto window = cast(WM_Window *)data;
+    wm_release_string_parts(window->title);
+    window->title = wm_string_parts_from_cstring(title);
 }
 
 function void wm_river_window_listener_parent(
@@ -73,9 +122,21 @@ function void wm_river_window_listener_parent(
     river_window_v1 *river_window,
     river_window_v1 *parent)
 {
-    Unused(data);
     Unused(river_window);
     Unused(parent);
+
+    auto window = cast(WM_Window *)data;
+
+    DLLForEach(wm_state->windows.first, current_window) {
+        if (current_window->window == parent) {
+            window->parent = current_window;
+            break;
+        }
+    }
+
+    if (!window->parent) {
+        logger_errorf(wm_state->logger, "Could not find parent for window.");
+    }
 }
 
 function void wm_river_window_listener_decoration_hint(
@@ -385,6 +446,10 @@ function void wm_river_window_manager_listener_manage_start(void *data,
             logger_debugf(wm_state->logger, "Window closed.");
 
             list_remove(&wm_state->windows, window);
+
+            wm_release_string_parts(window->title);
+            wm_release_string_parts(window->app_id);
+
             river_window_v1_destroy(window->window);
             *window = {};
             list_push(&wm_state->free_windows, window);

@@ -1,3 +1,19 @@
+#define WM_STRING_PART_SIZE 64
+
+struct WM_String_Part {
+    WM_String_Part *next, *prev;
+
+    Int len; // actually used part of the string
+    U8  buffer[WM_STRING_PART_SIZE];
+};
+
+typedef List<WM_String_Part> WM_String_Parts;
+
+function WM_String_Part *wm_new_string_part(void);
+function WM_String_Parts wm_string_parts_from_cstring(char const *cstring);
+function WM_String_Parts wm_string_parts_from_string(String string);
+function void wm_release_string_parts(WM_String_Parts parts);
+
 struct WM_Output {
     WM_Output *next, *prev;
 
@@ -7,6 +23,10 @@ struct WM_Output {
 struct WM_Window {
     WM_Window *next, *prev;
 
+    WM_String_Parts title;
+    WM_String_Parts app_id;
+
+    WM_Window       *parent;
     river_window_v1 *window;
 };
 
@@ -47,6 +67,8 @@ typedef List<WM_Command_Node> WM_Command_List;
 struct WM_State {
     Arena  *arena;
     Logger logger;
+
+    WM_String_Parts free_string_parts;
 
     WM_Command_List commands;
     WM_Command_List free_commands;

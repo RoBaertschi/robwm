@@ -123,6 +123,9 @@ function Uint operator ""_uint(unsigned long long value) { return cast(Uint)valu
 #define DLLForEach_N(first, element, next) for (auto element = (first); element; element = element->next)
 #define DLLForEach(first, element) DLLForEach_N(first, element, next)
 
+#define DLLForEachSafe_N(first, element, next) for (auto element = (first), Glue(element, _next) = (first) ? (first)->next : 0; element; element = Glue(element, _next), Glue(element, _next) = element ? element->next : 0)
+#define DLLForEachSafe(first, element) DLLForEachSafe_N(first, element, next)
+
 #define DLLPushBack_NP(f,l,n,next,prev) ((f)==0?\
 ((f)=(l)=(n),(n)->next=(n)->prev=0):\
 ((n)->prev=(l),(l)->next=(n),(l)=(n),(n)->next=0))
