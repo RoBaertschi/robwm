@@ -62,7 +62,25 @@ function String wm_string_from_string_parts(Arena *arena, WM_String_Parts parts)
     };
 }
 
-function void wm_push_command(WM_Command command) {
+function WM_Layout_Node *wm_new_layout_node(void) {
+    auto layout_node = list_pop_front(&wm_state->free_layout_nodes);
+    if (!layout_node) {
+        layout_node = arena_new<WM_Layout_Node>(wm_state->arena);
+    }
+    return layout_node;
+}
+
+function WM_Layout *wm_new_layout(void) {
+    auto layout = list_pop_front(&wm_state->free_layouts);
+    if (!layout) {
+        layout = arena_new<WM_Layout>(wm_state->arena);
+    }
+    return layout;
+}
+
+function void wm_push_command(WM_Command_Kind kind, WM_Window *window, V2I32 new_dimensions = {}) {
+    WM_Command command = { kind, window, new_dimensions };
+
     auto command_node = list_pop_front(&wm_state->free_commands);
     if (!command_node) {
         command_node = arena_new<WM_Command_Node>(wm_state->arena);
@@ -79,7 +97,7 @@ function void wm_river_window_listener_closed(
 {
     Unused(river_window);
     auto window = cast(WM_Window *)data;
-    wm_push_command({ WM_Command_Manage_Window_Closed, window });
+    wm_push_command(WM_Command_Manage_Window_Closed, window);
 }
 
 function void wm_river_window_listener_dimensions_hint(
@@ -104,10 +122,10 @@ function void wm_river_window_listener_dimensions(
     I32 width,
     I32 height)
 {
-    Unused(data);
     Unused(river_window);
-    Unused(width);
-    Unused(height);
+    auto window = cast(WM_Window *)data;
+
+    wm_push_command(WM_Command_Manage_Window_Dimensions, window, v2i32(width, height));
 }
 
 function void wm_river_window_listener_app_id(
@@ -477,6 +495,12 @@ function void wm_river_window_manager_listener_manage_start(void *data,
             list_push(&wm_state->free_windows, window);
             handled = true;
             break;
+        case WM_Command_Manage_Window_Dimensions:
+            // TODO(robin): adjust layout
+            window->dimensions = command.new_dimensions;
+
+            handled = true;
+            break;
         }
         case WM_Command__MAX: break;
         }
@@ -532,7 +556,7 @@ function void wm_river_window_manager_listener_window(void *data,
 
     river_window_v1_add_listener(river_window, &wm_river_window_listener, window);
 
-    wm_push_command({ WM_Command_Manage_Window_Added, window });
+    wm_push_command(WM_Command_Manage_Window_Added, window);
 }
 
 function void wm_river_window_manager_listener_output(void *data,

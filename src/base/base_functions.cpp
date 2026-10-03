@@ -24,3 +24,11 @@ function U64 unmix_u64(U64 x) {
     x = x ^ (x >> 30) ^ (x >> 60);
     return x;
 }
+
+
+function V2I32 v2i32(I32 x, I32 y) {
+    return {
+        x,
+        y
+    };
+}

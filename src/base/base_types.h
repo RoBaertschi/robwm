@@ -25,3 +25,17 @@ typedef I64 Int;
 typedef U64 Uint;
 
 typedef Uint Uintptr;
+
+union V2I32 {
+    struct {
+        I32 x;
+        I32 y;
+    };
+    I32 v[2];
+};
+
+enum Axis {
+    Axis_X,
+    Axis_Y,
+    Axis__MAX,
+};

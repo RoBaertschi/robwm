@@ -18,7 +18,8 @@ function String wm_string_from_string_parts(Arena *arena, WM_String_Parts parts)
 struct WM_Output {
     WM_Output *next, *prev;
 
-    river_output_v1 *output;
+    river_output_v1  *output;
+    struct WM_Layout *layout;
 };
 
 struct WM_Window {
@@ -29,6 +30,8 @@ struct WM_Window {
 
     WM_Window       *parent;
     river_window_v1 *window;
+
+    V2I32 dimensions;
 };
 
 struct WM_Seat {
@@ -42,9 +45,10 @@ typedef List<WM_Window> WM_Window_List;
 typedef List<WM_Seat> WM_Seat_List;
 
 // X(name)
-#define WM_COMMANDS \
-    X(Manage_Window_Added)\
-    X(Manage_Window_Closed)
+#define WM_COMMANDS             \
+    X(Manage_Window_Added)      \
+    X(Manage_Window_Closed)     \
+    X(Manage_Window_Dimensions) \
 
 enum WM_Command_Kind {
     #define X(name) Glue(WM_Command_, name),
@@ -56,6 +60,7 @@ enum WM_Command_Kind {
 struct WM_Command {
     WM_Command_Kind kind;
     WM_Window       *window;
+    V2I32           new_dimensions;
 };
 
 struct WM_Command_Node {
@@ -65,9 +70,39 @@ struct WM_Command_Node {
 
 typedef List<WM_Command_Node> WM_Command_List;
 
+// Layout
+
+struct WM_Layout_Node {
+    WM_Layout_Node *parent;
+    WM_Layout_Node *siblings_next,  *siblings_prev;
+    WM_Layout_Node *children_first, *children_last;
+
+    Axis      direction;
+    WM_Window *window; // if 0, then empty
+    V2I32     size; // calculated node size, not the actual window size, the window can do whatever it wants sadly
+};
+
+typedef List<WM_Layout_Node, &WM_Layout_Node::siblings_next, &WM_Layout_Node::siblings_prev> WM_Layout_Node_List;
+
+struct WM_Layout {
+    WM_Layout *next, *prev;
+
+    WM_Layout_Node *root;
+    WM_Layout_Node *focused;
+    WM_Output      *output;
+};
+
+typedef List<WM_Layout> WM_Layout_List;
+
+function WM_Layout_Node *wm_new_layout_node(void);
+function WM_Layout *wm_new_layout(void);
+
 struct WM_State {
     Arena  *arena;
     Logger logger;
+
+    WM_Layout_List      free_layouts;
+    WM_Layout_Node_List free_layout_nodes;
 
     WM_String_Parts free_string_parts;
 
