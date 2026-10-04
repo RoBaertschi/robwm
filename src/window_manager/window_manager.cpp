@@ -119,8 +119,50 @@ function void wm_layout_node_add_child(WM_Layout_Node *node, WM_Layout_Node *chi
     DLLPushBack_NP(node->children_first, node->children_last, child, siblings_next, siblings_prev);
 }
 
+function void wm_layout_node_resize(WM_Layout_Node *node, V2I32 size) {
+    node->size = size;
+
+    I32 size_diff      = size.v[node->direction] - node->size.v[node->direction];
+    I32 children_count = 0;
+
+    DLLForEach_N(node->children_first, current_child, siblings_next) {
+        children_count += 1;
+    }
+
+    if (1 < children_count) {
+        I32 dist_size     = size_diff / children_count;
+        I32 dist_overflow = size_diff % children_count;
+
+        I32 dist_overflow_abs = abs(dist_overflow);
+        I32 dist_overflow_value = 1;
+        if (dist_overflow < 0) {
+            dist_overflow_value = -1;
+        }
+
+        Int i = 0;
+
+        DLLForEach_N(node->children_first, current_child, siblings_next) {
+            V2I32 new_size = size;
+            new_size.v[node->direction] += dist_size;
+            if (i < dist_overflow_abs) {
+                new_size.v[node->direction] += dist_overflow_value;
+            }
+
+            wm_layout_node_resize(current_child, new_size);
+
+            i += 1;
+        }
+    } else if (children_count == 1) {
+        wm_layout_node_resize(node->children_first, size);
+    }
+}
+
 function void wm_layout_add_node(WM_Layout *layout, WM_Layout_Node *node) {
     wm_layout_node_add_child(layout->root, node);
+}
+
+function void wm_layout_resize(WM_Layout *layout, V2I32 size) {
+    wm_layout_node_resize(layout->root, size);
 }
 
 function void wm_push_command(WM_Command_Kind kind, WM_Window *window, WM_Output *output, V2I32 new_dimensions) {

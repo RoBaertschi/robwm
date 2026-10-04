@@ -10,7 +10,6 @@
 #include "bindings_manager/bindings_manager_inc.cpp"
 #include "window_manager/window_manager_inc.cpp"
 
-#include <stdio.h>
 #include <spawn.h>
 
 function void spawn_alacritty_action(void *) {
@@ -18,7 +17,7 @@ function void spawn_alacritty_action(void *) {
     extern char **environ;
     char program[] = "alacritty";
     char *const args[] = { program, 0 };
-    posix_spawnp(&_pid, "alacritty", 0, 0, args, environ);
+    posix_spawnp(0, "alacritty", 0, 0, args, environ);
 }
 
 function_global int main(void) {
