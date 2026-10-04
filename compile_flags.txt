@@ -1,0 +1,10 @@
+-include src/main.cpp
+-std=gnu++11
+-xc++
+-Wall
+-Wextra
+-Warith-conversion
+-Wsign-conversion
+-Wno-unused-function
+-fno-rtti
+-fno-exceptions

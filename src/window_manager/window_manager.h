@@ -15,12 +15,26 @@ function WM_String_Parts wm_string_parts_from_string(String string);
 function void wm_release_string_parts(WM_String_Parts parts);
 function String wm_string_from_string_parts(Arena *arena, WM_String_Parts parts);
 
+enum WM_Output_Missing : U8 {
+    WM_Output_Missing_Dimensions = 1 << 0,
+    WM_Output_Missing_Position   = 1 << 1,
+    WM_Output_Missing_All        = WM_Output_Missing_Dimensions | WM_Output_Missing_Position,
+};
+
 struct WM_Output {
     WM_Output *next, *prev;
 
     river_output_v1  *output;
     struct WM_Layout *layout;
+
+    V2I32 dimensions;
+    V2I32 position;
+    U8    missing; // any unset bit is missing lul
 };
+
+function Bool wm_output_is_complete(WM_Output *output);
+// Called for incomplete output's on stat change
+function void wm_output_handle_completness(WM_Output *output);
 
 struct WM_Window {
     WM_Window *next, *prev;
@@ -49,6 +63,9 @@ typedef List<WM_Seat> WM_Seat_List;
     X(Manage_Window_Added)      \
     X(Manage_Window_Closed)     \
     X(Manage_Window_Dimensions) \
+    X(Manage_Output_Complete)   \
+    X(Manage_Output_Dimensions) \
+    X(Manage_Output_Position)
 
 enum WM_Command_Kind {
     #define X(name) Glue(WM_Command_, name),
@@ -60,7 +77,8 @@ enum WM_Command_Kind {
 struct WM_Command {
     WM_Command_Kind kind;
     WM_Window       *window;
-    V2I32           new_dimensions;
+    WM_Output       *output;
+    V2I32           v2i32;
 };
 
 struct WM_Command_Node {
@@ -96,6 +114,11 @@ typedef List<WM_Layout> WM_Layout_List;
 
 function WM_Layout_Node *wm_new_layout_node(void);
 function WM_Layout *wm_new_layout(void);
+function void wm_layout_node_add_child(WM_Layout_Node *node, WM_Layout_Node *child);
+function void wm_layout_node_resize(WM_Layout_Node *node, V2I32 size);
+// Adds new node to the root node as a child
+function void wm_layout_add_node(WM_Layout *layout, WM_Layout_Node *node);
+function void wm_layout_resize(WM_Layout *layout, V2I32 size);
 
 struct WM_State {
     Arena  *arena;
@@ -110,6 +133,7 @@ struct WM_State {
     WM_Command_List free_commands;
 
     WM_Output_List outputs;
+    WM_Output_List unfinished_outputs;
     WM_Output_List free_outputs;
 
     WM_Window_List windows;
