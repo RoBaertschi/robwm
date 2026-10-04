@@ -13,7 +13,6 @@
 #include <spawn.h>
 
 function void spawn_alacritty_action(void *) {
-    int _pid;
     extern char **environ;
     char program[] = "alacritty";
     char *const args[] = { program, 0 };

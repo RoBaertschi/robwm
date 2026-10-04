@@ -104,11 +104,18 @@ function void wm_layout_node_add_child(WM_Layout_Node *node, WM_Layout_Node *chi
 
     auto axis = node->direction;
 
+    // NOTE(robin): I don't like this much, share to much with the resize code
+    //              Might wanna calculate the size of the new child, resize the
+    //              node itself down and then add the child and size
+    //              Just a thought tough
+
     I32 new_size = 0;
     if (children_count != 0) {
         F64 shrink_factor = cast(F64)children_count / cast(F64)(children_count + 1);
         DLLForEach_N(node->children_first, current_child, siblings_next) {
-            current_child->size.v[axis] = cast(I32)(cast(F64)current_child->size.v[axis] * shrink_factor);
+            auto size = current_child->size;
+            size.v[axis] = cast(I32)(cast(F64)current_child->size.v[axis] * shrink_factor);
+            wm_layout_node_resize(current_child, size);
             new_size += current_child->size.v[axis];
         }
     }
