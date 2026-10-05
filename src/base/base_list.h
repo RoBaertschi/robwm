@@ -24,6 +24,23 @@ function void list_push(List<Node, Next, Prev> *list, Node *node) {
 }
 
 template <typename Node, Node *Node::* Next = &Node::next, Node *Node::* Prev = &Node::prev>
+function void list_push_front(List<Node, Next, Prev> *list, Node *node) {
+    if (list->first == 0) {
+        list->first = node;
+        list->last  = node;
+        node->*Next = 0;
+        node->*Prev = 0;
+    } else {
+        node->*Next        = list->first;
+        list->first->*Prev = node;
+        list->first        = node;
+        node->*Prev        = 0;
+    }
+
+    list->len += 1;
+}
+
+template <typename Node, Node *Node::* Next = &Node::next, Node *Node::* Prev = &Node::prev>
 function void list_remove(List<Node, Next, Prev> *list, Node *node) {
     if (list->first == list->last) {
         list->first = 0;

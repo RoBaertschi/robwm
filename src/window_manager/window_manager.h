@@ -66,6 +66,7 @@ typedef List<WM_Seat> WM_Seat_List;
     X(Window_Closed)     \
     X(Window_Dimensions) \
     X(Window_Resize)     \
+    X(Window_Focus)      \
     X(Output_Complete)   \
     X(Output_Dimensions) \
     X(Output_Position)
@@ -81,6 +82,7 @@ struct WM_Command {
     WM_Command_Kind kind;
     WM_Window       *window;
     WM_Output       *output;
+    WM_Seat         *seat;
     V2I32           v2i32;
 };
 

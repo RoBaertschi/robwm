@@ -1,8 +1,21 @@
 #include "window_manager_inc.h"
 variable_global WM_State *wm_state;
 
-function void wm_push_command(WM_Command_Kind kind, WM_Window *window, WM_Output *output, V2I32 new_dimensions) {
-    WM_Command command = { kind, window, output, new_dimensions };
+function WM_Command *wm_push_command_front(WM_Command_Kind kind) {
+    auto command_node = list_pop_front(&wm_state->free_commands);
+    if (!command_node) {
+        command_node = arena_new<WM_Command_Node>(wm_state->arena);
+    }
+
+    command_node->command.kind = kind;
+    list_push_front(&wm_state->commands, command_node);
+    return &command_node->command;
+}
+
+// TODO(robin): at this point, I should just return a pointer to the command that
+//              the caller then can fill out, this is getting ridicoulos
+function void wm_push_command(WM_Command_Kind kind, WM_Window *window, WM_Output *output, WM_Seat *seat, V2I32 new_dimensions) {
+    WM_Command command = { kind, window, output, seat, new_dimensions };
 
     auto command_node = list_pop_front(&wm_state->free_commands);
     if (!command_node) {
@@ -15,23 +28,27 @@ function void wm_push_command(WM_Command_Kind kind, WM_Window *window, WM_Output
 }
 
 function void wm_push_command(WM_Command_Kind kind, WM_Window *window, WM_Output *output) {
-    wm_push_command(kind, window, output, {});
+    wm_push_command(kind, window, output, 0, {});
 }
 
 function void wm_push_command(WM_Command_Kind kind, WM_Window *window, V2I32 new_dimensions) {
-    wm_push_command(kind, window, 0, new_dimensions);
+    wm_push_command(kind, window, 0, 0, new_dimensions);
 }
 
 function void wm_push_command(WM_Command_Kind kind, WM_Window *window) {
-    wm_push_command(kind, window, 0, {});
+    wm_push_command(kind, window, 0, 0, {});
+}
+
+function void wm_push_command(WM_Command_Kind kind, WM_Window *window, WM_Seat *seat) {
+    wm_push_command(kind, window, 0, seat, {});
 }
 
 function void wm_push_command(WM_Command_Kind kind, WM_Output *output) {
-    wm_push_command(kind, 0, output, {});
+    wm_push_command(kind, 0, output, 0, {});
 }
 
 function void wm_push_command(WM_Command_Kind kind, WM_Output *output, V2I32 new_dimensions) {
-    wm_push_command(kind, 0, output, new_dimensions);
+    wm_push_command(kind, 0, output, 0, new_dimensions);
 }
 
 function WM_String_Part *wm_new_string_part(void) {
@@ -171,8 +188,8 @@ function void wm_layout_node_remove(WM_Layout_Node *node) {
     }
 
     if (1 < siblings_count) {
-        I32 dist_size     = node->size.v[node->parent->direction] / siblings_count;
-        I32 dist_overflow = node->size.v[node->parent->direction] % siblings_count;
+        I32 dist_size     = node->size.v[parent->direction] / siblings_count;
+        I32 dist_overflow = node->size.v[parent->direction] % siblings_count;
 
         I32 dist_overflow_abs = abs(dist_overflow);
         I32 dist_overflow_value = 1;
@@ -184,9 +201,9 @@ function void wm_layout_node_remove(WM_Layout_Node *node) {
 
         DLLForEach_N(parent->children_first, current_child, siblings_next) {
             V2I32 new_size = current_child->size;
-            new_size.v[node->direction] += dist_size;
+            new_size.v[parent->direction] += dist_size;
             if (i < dist_overflow_abs) {
-                new_size.v[node->direction] += dist_overflow_value;
+                new_size.v[parent->direction] += dist_overflow_value;
             }
 
             wm_layout_node_resize(current_child, new_size);
@@ -201,10 +218,26 @@ function void wm_layout_node_remove(WM_Layout_Node *node) {
         // To   N -> W
         if (parent->parent && !parent->window) {
             // not root
-            *parent = *only_child;
+            parent->window    = only_child->window;
+            parent->direction = only_child->direction;
+
+            if (parent->window) {
+                parent->window->node = parent;
+            }
+
+            parent->children_first = only_child->children_first;
+            parent->children_last  = only_child->children_last;
+
+            DLLForEach_N(parent->children_first, child, siblings_next) {
+                child->parent = parent;
+            }
+
             *only_child = {};
             list_push(&wm_state->free_layout_nodes, only_child);
         }
+    } else if (parent->parent) {
+        // Node + parent should go away, so delete parent too
+        wm_layout_node_remove(parent);
     }
 
     *node = {};
@@ -212,10 +245,10 @@ function void wm_layout_node_remove(WM_Layout_Node *node) {
 }
 
 function void wm_layout_node_resize(WM_Layout_Node *node, V2I32 size) {
-    node->size = size;
-
     I32 size_diff      = size.v[node->direction] - node->size.v[node->direction];
     I32 children_count = 0;
+
+    node->size = size;
 
     if (node->window) {
         wm_push_command(WM_Command_Window_Resize, node->window, size);
@@ -637,11 +670,25 @@ function void wm_river_seat_listener_wl_seat(void *data,
 
 function void wm_river_seat_listener_pointer_enter(void *data,
                river_seat_v1 *river_seat,
-               river_window_v1 *window)
+               river_window_v1 *river_window)
 {
-    Unused(data);
     Unused(river_seat);
-    Unused(window);
+
+    WM_Window *window = 0;
+    DLLForEach(wm_state->windows.first, current_window) {
+        if (current_window->window == river_window) {
+            window = current_window;
+            break;
+        }
+    }
+
+    if (window) {
+        WM_Seat *seat = cast(WM_Seat *)data;
+
+        wm_push_command(WM_Command_Window_Focus, window, seat);
+    } else {
+        logger_errorf(wm_state->logger, "Could not find interacted window.");
+    }
 }
 
 function void wm_river_seat_listener_pointer_leave(void *data,
@@ -734,11 +781,14 @@ function void wm_river_window_manager_listener_manage_start(void *data,
     Unused(data);
     logger_debugf(wm_state->logger, "Window manager manage start.");
 
+    WM_Window_List windows_to_remove = {};
+
     while (wm_state->commands.first) {
         auto command_node = wm_state->commands.first;
         auto command = command_node->command;
         auto window  = command.window;
         auto output  = command.output;
+        auto seat    = command.seat;
 
         switch (command.kind) {
         case WM_Command_Window_Added: {
@@ -754,27 +804,23 @@ function void wm_river_window_manager_listener_manage_start(void *data,
             break;
         }
         case WM_Command_Window_Closed: {
-            logger_debugf(wm_state->logger, "Window closed.");
-
-            wm_layout_node_remove(window->node);
-
             list_remove(&wm_state->windows, window);
-
-            wm_release_string_parts(window->title);
-            wm_release_string_parts(window->app_id);
-
-            river_window_v1_destroy(window->window);
-            *window = {};
-            list_push(&wm_state->free_windows, window);
+            logger_debugf(wm_state->logger, "Window closed.");
+            wm_layout_node_remove(window->node);
+            list_push(&windows_to_remove, window);
             break;
         }
         case WM_Command_Window_Dimensions: {
-            // TODO(robin): adjust layout
             window->dimensions = command.v2i32;
+            wm_layout_node_resize(window->node, window->dimensions);
             break;
         }
         case WM_Command_Window_Resize: {
             river_window_v1_propose_dimensions(window->window, command.v2i32.x, command.v2i32.y);
+            break;
+        }
+        case WM_Command_Window_Focus: {
+            river_seat_v1_focus_window(seat->river_seat, window->window);
             break;
         }
         case WM_Command_Output_Complete: {
@@ -804,6 +850,18 @@ function void wm_river_window_manager_listener_manage_start(void *data,
 
         list_remove(&wm_state->commands, command_node);
         list_push(&wm_state->free_commands, command_node);
+    }
+
+    while (windows_to_remove.first) {
+        auto window = windows_to_remove.first;
+        list_remove(&windows_to_remove, window);
+
+        wm_release_string_parts(window->title);
+        wm_release_string_parts(window->app_id);
+
+        river_window_v1_destroy(window->window);
+        *window = {};
+        list_push(&wm_state->free_windows, window);
     }
 
     logger_debugf(wm_state->logger, "Window manager manage finished.");
