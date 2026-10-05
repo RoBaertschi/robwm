@@ -1,4 +1,5 @@
 // ewww, ugly, but does the job
+#include "base_inc.h"
 template <typename Node, Node *Node::* Next = &Node::next, Node *Node::* Prev = &Node::prev>
 struct List {
     Node *first, *last;
@@ -49,4 +50,13 @@ function Node *list_pop_front(List<Node, Next, Prev> *list) {
     }
 
     return result;
+}
+
+template <typename Node, Node *Node::* Next = &Node::next, Node *Node::* Prev = &Node::prev>
+function void list_concat(List<Node, Next, Prev> *list, List<Node, Next, Prev> other) {
+    while (other.first) {
+        auto node = other.first;
+        list_remove(&other, node);
+        list_push(list, node);
+    }
 }

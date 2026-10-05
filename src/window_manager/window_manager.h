@@ -44,8 +44,10 @@ struct WM_Window {
 
     WM_Window       *parent;
     river_window_v1 *window;
+    river_node_v1   *render_node;
 
     V2I32 dimensions;
+    struct WM_Layout_Node *node;
 };
 
 struct WM_Seat {
@@ -59,13 +61,14 @@ typedef List<WM_Window> WM_Window_List;
 typedef List<WM_Seat> WM_Seat_List;
 
 // X(name)
-#define WM_COMMANDS             \
-    X(Manage_Window_Added)      \
-    X(Manage_Window_Closed)     \
-    X(Manage_Window_Dimensions) \
-    X(Manage_Output_Complete)   \
-    X(Manage_Output_Dimensions) \
-    X(Manage_Output_Position)
+#define WM_COMMANDS      \
+    X(Window_Added)      \
+    X(Window_Closed)     \
+    X(Window_Dimensions) \
+    X(Window_Resize)     \
+    X(Output_Complete)   \
+    X(Output_Dimensions) \
+    X(Output_Position)
 
 enum WM_Command_Kind {
     #define X(name) Glue(WM_Command_, name),
@@ -116,9 +119,11 @@ function WM_Layout_Node *wm_new_layout_node(void);
 function WM_Layout *wm_new_layout(void);
 function void wm_layout_node_add_child(WM_Layout_Node *node, WM_Layout_Node *child);
 function void wm_layout_node_resize(WM_Layout_Node *node, V2I32 size);
+function void wm_layout_node_render(WM_Layout_Node *node, V2I32 position);
 // Adds new node to the root node as a child
 function void wm_layout_add_node(WM_Layout *layout, WM_Layout_Node *node);
 function void wm_layout_resize(WM_Layout *layout, V2I32 size);
+function void wm_layout_render(WM_Layout *layout);
 
 struct WM_State {
     Arena  *arena;
