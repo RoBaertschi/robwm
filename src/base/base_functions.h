@@ -9,3 +9,4 @@ function U64 mix_u64(U64 value);
 function U64 unmix_u64(U64 x);
 
 function V2I32 v2i32(I32 x, I32 y);
+function Color color(U8 r, U8 g, U8 b, U8 a);

@@ -1,1 +1,2 @@
 src/wayland/protocols/* linguist-generated
+src/base/third_party/* linguist-vendored

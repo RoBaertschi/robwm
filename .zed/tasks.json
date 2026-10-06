@@ -23,7 +23,7 @@
     "save": "all",
     "reveal": "no_focus",
     "env": {
-      "WAYLAND_DISPLAY": "wayland-1",
+      "WAYLAND_DISPLAY": "wayland-2",
       "WAYLAND_DEBUG": "1"
     }
   },

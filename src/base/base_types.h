@@ -34,6 +34,16 @@ union V2I32 {
     I32 v[2];
 };
 
+union Color {
+    struct {
+        U8 b;
+        U8 g;
+        U8 r;
+        U8 a;
+    };
+    U8 v[4];
+};
+
 enum Axis {
     Axis_X,
     Axis_Y,

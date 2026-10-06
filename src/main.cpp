@@ -1,4 +1,5 @@
 #include "base/base_inc.h"
+#include "render/render_inc.h"
 #include "wayland/wayland_inc.h"
 #include "bindings_manager/bindings_manager_inc.h"
 #include "window_manager/window_manager_inc.h"
@@ -6,6 +7,7 @@
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include "base/base_inc.cpp"
+#include "render/render_inc.cpp"
 #include "wayland/wayland_inc.cpp"
 #include "bindings_manager/bindings_manager_inc.cpp"
 #include "window_manager/window_manager_inc.cpp"

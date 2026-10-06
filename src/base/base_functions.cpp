@@ -32,3 +32,12 @@ function V2I32 v2i32(I32 x, I32 y) {
     result.y = y;
     return result;
 }
+
+function Color color(U8 r, U8 g, U8 b, U8 a) {
+    Color result = {};
+    result.r = r;
+    result.g = g;
+    result.b = b;
+    result.a = a;
+    return result;
+}

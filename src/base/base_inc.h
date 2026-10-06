@@ -13,4 +13,6 @@
 #include "base_arena.h"
 #include "base_logging.h"
 
+#include "third_party/xxhash.h"
+
 #endif
