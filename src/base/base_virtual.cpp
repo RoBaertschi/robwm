@@ -21,6 +21,17 @@ function Bool virtual_commit(void *data, Uint size) {
     return ok;
 }
 
+function Virtual_Reserve_Result virtual_reserve_and_commit(Uint size) {
+    size = align_up(size, cast(Uint)VIRTUAL_PAGE_SIZE);
+
+    Virtual_Reserve_Result result = {};
+
+    result.data = mmap(0, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+    result.ok   = result.data != MAP_FAILED;
+
+    return result;
+}
+
 function Bool virtual_decommit(void *data, Uint size) {
     Assert(align_up(cast(Uintptr)data, cast(Uintptr)VIRTUAL_PAGE_SIZE) == cast(Uintptr)data);
     size = align_up(size, cast(Uint)VIRTUAL_PAGE_SIZE);
