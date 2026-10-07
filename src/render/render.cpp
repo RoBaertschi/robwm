@@ -1,13 +1,3 @@
-variable_global R_State *r_state = 0;
-
-function R_State *r_new_state(Arena *arena, V2I32 dimensions) {
-    auto state = arena_new<R_State>(arena);
-
-    r_init_state(state, dimensions);
-
-    return state;
-}
-
 function V2I32 r_hash_rects_dimensions_from_dimensions(V2I32 dimensions) {
     V2I32 result = {};
     for (U8 axis = Axis_X; axis < Axis__MAX; axis++) {
@@ -38,6 +28,19 @@ function R_Framebuffer_Layout_Info r_framebuffer_layout_info_from_dimensions(V2I
     result.byte_size = align_up(result.hash_rects_byte_size * 2 + result.framebuffer_byte_size, cast(Int)VIRTUAL_PAGE_SIZE);
 
     return result;
+}
+
+
+variable_global R_State *r_state = 0;
+
+function R_State *r_new_state(V2I32 dimensions) {
+    auto arena   = arena_alloc();
+    auto state   = arena_new<R_State>(arena);
+    state->arena = arena;
+
+    r_init_state(state, dimensions);
+
+    return state;
 }
 
 function void r_init_state(R_State *state, V2I32 dimensions) {
@@ -77,7 +80,7 @@ function void r_init_state_with_framebuffer_memory(
         hash_rects < cast(U64 *)(state->framebuffer_memory + info.framebuffer_byte_size + info.hash_rects_byte_size * 2);
         hash_rects++)
     {
-        *hash_rects = 0x9E3779B97F4A7C15_u64;
+        *hash_rects = R_HASH_RECT_INITIAL_HASH;
     }
 }
 
@@ -99,4 +102,9 @@ function void r_resize(V2I32 dimensions) {
 
         r_init_state_with_framebuffer_memory(r_state, cast(U8 *)result.data, info.byte_size * 2, info);
     }
+}
+
+
+function void r_frame(void) {
+
 }
